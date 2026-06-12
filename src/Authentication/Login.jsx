@@ -33,7 +33,7 @@ const Login = () => {
     };
 
     const handleGoogleLogin = () => {
-        // 'async' hata diya kyunki hum direct promise return kar rahe hain
+        // Yahan 'async' mat likhna
         signInWithPopup(auth, googleProvider)
             .then((result) => {
                 alert("✅ Boss ki entry ho gayi!");
@@ -41,7 +41,8 @@ const Login = () => {
             })
             .catch((err) => {
                 console.error("Google Login Error:", err);
-                setError("Google se login nahi ho paya. Popup allow kiya hai?");
+                // Agar yahan error aaye, toh console check kar
+                setError("Google login popup blocked. Please allow popups!");
             });
     };
 
