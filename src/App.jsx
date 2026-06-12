@@ -26,6 +26,7 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log("Firebase Auth State:", currentUser);
       setUser(currentUser);
       setIsAuthChecking(false); // Checking complete ho gayi
     });
