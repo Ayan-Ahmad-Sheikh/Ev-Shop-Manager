@@ -5,7 +5,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithP
 
 const Login = () => {
     const navigate = useNavigate();
-    const [isLogin, setIsLogin] = useState(true); // True = Login page, False = Signup page
+    const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -13,17 +13,12 @@ const Login = () => {
     const handleAuth = async (e) => {
         e.preventDefault();
         setError('');
-
         try {
             if (isLogin) {
-                // 👉 LOGIN LOGIC
                 await signInWithEmailAndPassword(auth, email, password);
-                alert("✅ Welcome back Boss!");
-                navigate('/'); // Login hote hi Dashboard par jao
+                navigate('/'); 
             } else {
-                // 👉 SIGNUP (NAYA ACCOUNT) LOGIC
                 await createUserWithEmailAndPassword(auth, email, password);
-                alert("🎉 Naya Account Ban Gaya! Ab settings me dukan ki detail daal lena.");
                 navigate('/setup-shop');
             }
         } catch (err) {
@@ -33,16 +28,21 @@ const Login = () => {
     };
 
     const handleGoogleLogin = () => {
-        // Yahan 'async' mat likhna
+        setError('');
+        // CRITICAL FIX: Yahan 'async/await' nahi hai, direct call hai taaki browser block na kare
         signInWithPopup(auth, googleProvider)
             .then((result) => {
-                alert("✅ Boss ki entry ho gayi!");
-                navigate('/');
+                if (result.user) {
+                    navigate('/'); // Login hote hi seedha dashboard
+                }
             })
             .catch((err) => {
                 console.error("Google Login Error:", err);
-                // Agar yahan error aaye, toh console check kar
-                setError("Google login popup blocked. Please allow popups!");
+                if (err.code === 'auth/popup-blocked') {
+                    setError("Browser ne popup rok diya hai! Upar URL bar ke right side mein 'Popup Blocked' icon par click karke 'Always Allow' karo.");
+                } else {
+                    setError("Google se login nahi ho paya. Ek baar dobara try karo.");
+                }
             });
     };
 
@@ -92,7 +92,6 @@ const Login = () => {
                     <p className="mx-4 mb-0 text-center font-bold text-gray-400 text-xs">OR</p>
                 </div>
 
-                {/* --- GOOGLE BUTTON --- */}
                 <button
                     onClick={handleGoogleLogin}
                     className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold p-3 rounded-lg transition-all shadow-sm flex justify-center items-center gap-3"
