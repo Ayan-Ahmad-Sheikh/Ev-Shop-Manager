@@ -32,15 +32,17 @@ const Login = () => {
         }
     };
 
-    const handleGoogleLogin = async () => {
-        try {
-            await signInWithPopup(auth, googleProvider);
-            alert("✅ Boss ki entry ho gayi!");
-            navigate('/');
-        } catch (err) {
-            console.error("Google Login Error:", err);
-            setError("Google se login nahi ho paya.");
-        }
+    const handleGoogleLogin = () => {
+        // 'async' hata diya kyunki hum direct promise return kar rahe hain
+        signInWithPopup(auth, googleProvider)
+            .then((result) => {
+                alert("✅ Boss ki entry ho gayi!");
+                navigate('/');
+            })
+            .catch((err) => {
+                console.error("Google Login Error:", err);
+                setError("Google se login nahi ho paya. Popup allow kiya hai?");
+            });
     };
 
     return (
