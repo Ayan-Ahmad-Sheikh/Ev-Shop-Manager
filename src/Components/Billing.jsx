@@ -568,7 +568,7 @@ Thank you for visiting!`;
                 </div>
 
                 {/* SIGNATURE ROW - CHANGED TO FLEX */}
-                <div className="flex min-h-[50px] text-[10px] w-full">
+                <div className="flex min-h-12.5 text-[10px] w-full">
                   <div className="w-1/2 p-2 border-r border-black flex items-end text-gray-400 font-bold">Customer Sign</div>
                   <div className="w-1/2 p-2 text-right flex flex-col justify-between items-end">
                     <p className="font-bold text-gray-500 uppercase">for {shopDetails.shopName || 'YOUR BUSINESS NAME'}</p>
