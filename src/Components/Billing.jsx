@@ -331,7 +331,57 @@ Thank you for visiting!`;
   };
 
   if (loading) {
-    return <div className="p-10 text-center text-gray-500 font-bold text-lg">⏳ Cloud se Bills History load ho rahi hai...</div>;
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        {/* Skeleton Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 animate-pulse">
+          <div>
+            <div className="h-8 bg-gray-300 rounded-md w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded-md w-48"></div>
+          </div>
+          <div className="h-10 bg-gray-300 rounded-lg w-40"></div>
+        </div>
+
+        {/* Skeleton Top Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+              <div>
+                <div className="h-3 bg-gray-200 rounded w-24 mb-3"></div>
+                <div className="h-8 bg-gray-300 rounded w-32"></div>
+              </div>
+              <div className="w-12 h-12 bg-gray-100 rounded-xl"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Skeleton Search Bar */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex gap-3 animate-pulse">
+          <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+          <div className="h-10 bg-gray-100 rounded-lg w-1/4 hidden md:block"></div>
+        </div>
+
+        {/* Skeleton Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
+          <div className="border-b border-gray-100 pb-4 mb-4 flex justify-between">
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          </div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex justify-between items-center py-4 border-b border-gray-50">
+              <div className="h-10 bg-gray-100 rounded-lg w-10"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-8 bg-blue-50 rounded-lg w-24"></div>
+            </div>
+          ))}
+          <div className="text-center mt-6">
+            <p className="text-sm font-bold text-gray-400 tracking-wide">⏳ Securely fetching billing records...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

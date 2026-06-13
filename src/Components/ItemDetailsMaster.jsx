@@ -122,7 +122,70 @@ const ItemDetailsMaster = () => {
   };
 
   if (loading) {
-    return <div className="p-10 text-center text-gray-500 font-bold text-lg">⏳ Cloud se item ki detail nikal rahe hain...</div>;
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow border border-gray-200 overflow-hidden animate-pulse">
+
+          {/* 1. Top Header Skeleton */}
+          <div className="bg-gray-800 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex gap-2 mb-2">
+                <div className="h-5 bg-gray-700 rounded w-16"></div>
+                <div className="h-5 bg-gray-700 rounded w-24"></div>
+                <div className="h-5 bg-gray-700 rounded w-20"></div>
+              </div>
+              <div className="h-8 bg-gray-600 rounded w-64 mb-2"></div>
+              <div className="h-4 bg-gray-700 rounded w-32"></div>
+            </div>
+            <div className="h-10 bg-gray-700 rounded w-24"></div>
+          </div>
+
+          {/* 2. Tab Buttons Skeleton */}
+          <div className="flex border-b bg-gray-50 px-4 pt-2 gap-2">
+            <div className="h-10 bg-white border border-b-0 rounded-t-lg w-32"></div>
+            <div className="h-10 bg-gray-200 rounded-t-lg w-32"></div>
+            <div className="h-10 bg-gray-200 rounded-t-lg w-32"></div>
+          </div>
+
+          {/* 3. Content Panel Skeleton (View Tab) */}
+          <div className="p-6 space-y-6">
+            {/* Top 5 Metric Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="bg-gray-50 p-4 rounded border flex flex-col items-center">
+                  <div className="h-3 bg-gray-200 rounded w-20 mb-3"></div>
+                  <div className="h-6 bg-gray-300 rounded w-16"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Details Sections */}
+            <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+              <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 space-y-3">
+                <div className="h-4 bg-purple-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-purple-100 rounded w-3/4"></div>
+                <div className="h-3 bg-purple-100 rounded w-2/3"></div>
+              </div>
+            </div>
+
+            {/* Danger Zone Skeleton */}
+            <div className="border-t border-red-100 pt-6 mt-6 flex justify-between items-center bg-red-50 p-4 rounded-lg">
+              <div>
+                <div className="h-5 bg-red-200 rounded w-48 mb-2"></div>
+                <div className="h-3 bg-red-100 rounded w-64"></div>
+              </div>
+              <div className="h-10 bg-red-200 rounded w-32"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
   }
 
   return (

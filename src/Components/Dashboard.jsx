@@ -16,21 +16,21 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-    const checkShopData = async () => {
-      if (auth.currentUser) {
-        // 🔥 FIX: Ab Dashboard wahi check karega jahan SetupShop ne data save kiya hai!
-        const docRef = doc(db, "settings", `shopDetails_${auth.currentUser.uid}`); 
-        const docSnap = await getDoc(docRef);
+        const checkShopData = async () => {
+            if (auth.currentUser) {
+                // 🔥 FIX: Ab Dashboard wahi check karega jahan SetupShop ne data save kiya hai!
+                const docRef = doc(db, "settings", `shopDetails_${auth.currentUser.uid}`);
+                const docSnap = await getDoc(docRef);
 
-        if (!docSnap.exists()) {
-          // Agar dukan ka data nahi mila tabhi wapas bhejo
-          navigate('/setup-shop');
-        }
-      }
-    };
+                if (!docSnap.exists()) {
+                    // Agar dukan ka data nahi mila tabhi wapas bhejo
+                    navigate('/setup-shop');
+                }
+            }
+        };
 
-    checkShopData();
-  }, [navigate]);
+        checkShopData();
+    }, [navigate]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -189,7 +189,95 @@ const Dashboard = () => {
     }
 
     if (loading) {
-        return <div className="p-10 text-center text-gray-500 font-bold text-lg">⏳ Loading Business Intelligence...</div>;
+        return (
+            <div className="p-4 md:p-6 bg-gray-50 min-h-screen space-y-6">
+
+                {/* 1. Header & Tabs Skeleton */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b pb-4 gap-4 animate-pulse">
+                    <div>
+                        <div className="h-8 bg-gray-300 rounded-md w-64 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded-md w-80"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-full md:w-64"></div>
+                </div>
+
+                {/* 2. Quick Actions Skeleton */}
+                <div className="bg-white p-4 rounded-lg shadow-sm border flex flex-wrap gap-3 animate-pulse">
+                    <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+                </div>
+
+                {/* 3. Top 4 Summary Cards Skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="p-5 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between h-32">
+                            <div>
+                                <div className="h-3 bg-gray-200 rounded w-24 mb-3"></div>
+                                <div className="h-8 bg-gray-300 rounded w-32"></div>
+                            </div>
+                            <div className="h-4 bg-gray-100 rounded w-20 mt-2"></div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 4. Ledger & Tax Master Double Cards Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+                    {[1, 2].map((i) => (
+                        <div key={i} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm h-36 flex flex-col justify-center">
+                            <div className="h-3 bg-gray-200 rounded w-48 mb-2"></div>
+                            <div className="h-10 bg-gray-300 rounded w-40 mb-3"></div>
+                            <div className="flex justify-between">
+                                <div className="h-3 bg-gray-100 rounded w-32"></div>
+                                <div className="h-3 bg-gray-100 rounded w-16"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 5. Charts Section Skeleton */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-pulse">
+                    {/* Big Chart */}
+                    <div className="lg:col-span-2 bg-white p-5 rounded-lg shadow-sm border border-gray-100 h-80 flex flex-col">
+                        <div className="h-5 bg-gray-300 rounded w-48 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-64 mb-6"></div>
+                        <div className="flex-1 bg-gray-50 rounded-lg border border-gray-100 w-full"></div>
+                    </div>
+                    {/* Small Chart */}
+                    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 h-80 flex flex-col">
+                        <div className="h-5 bg-gray-300 rounded w-40 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-48 mb-6"></div>
+                        <div className="flex-1 bg-gray-50 rounded-lg border border-gray-100 w-full mb-4"></div>
+                        <div className="h-8 bg-gray-100 rounded w-full mt-auto"></div>
+                    </div>
+                </div>
+
+                {/* 6. Bottom Tables Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+                    {[1, 2].map((table) => (
+                        <div key={table} className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                            <div className="h-5 bg-gray-300 rounded w-48 mb-6"></div>
+                            <div className="space-y-4">
+                                {[1, 2, 3].map((row) => (
+                                    <div key={row} className="flex justify-between items-center border-b border-gray-50 pb-3">
+                                        <div>
+                                            <div className="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                                            <div className="h-2 bg-gray-100 rounded w-16"></div>
+                                        </div>
+                                        <div className="h-4 bg-gray-200 rounded w-16"></div>
+                                        <div className="h-6 bg-gray-100 rounded-full w-12"></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 7. Loading Text */}
+                <div className="text-center mt-2 animate-pulse">
+                    <p className="text-sm font-bold text-gray-400 tracking-wide">⏳ Syncing Business Intelligence & Live Charts...</p>
+                </div>
+            </div>
+        );
     }
 
     return (

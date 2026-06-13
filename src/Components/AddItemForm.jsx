@@ -12,22 +12,25 @@ const AddItemForm = () => {
     name: '',
     itemCode: '',
     category: '',
-    hsnCode: '', 
+    hsnCode: '',
     primaryUnit: 'Pcs',
     secondaryUnit: '',
     conversionRate: 1,
     isFixedRate: false,
     purchasePrice: 0,
-    sellingPrice: 0, 
-    wholesalePrice: 0, 
+    sellingPrice: 0,
+    wholesalePrice: 0,
     secondarySellingPrice: 0,
     openingStock: 0,
     openingStockDate: '',
     minStock: 5,
-    gstRate: 18 
+    gstRate: 18
   };
 
   const [newItem, setNewItem] = useState(initialFormState);
+
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const today = new Date();
@@ -37,6 +40,10 @@ const AddItemForm = () => {
 
     const formattedDate = `${yyyy}-${mm}-${dd}`;
     setNewItem(prev => ({ ...prev, openingStockDate: formattedDate }));
+
+    setTimeout(() => {
+      setLoading(false);
+    }, 400);
   }, []);
 
   const fixedConversions = {
@@ -79,6 +86,8 @@ const AddItemForm = () => {
       return false;
     }
 
+    setIsSaving(true);
+
     try {
       const cleanedPayload = {
         name: String(newItem.name).trim(),
@@ -111,6 +120,9 @@ const AddItemForm = () => {
       toast.error("Error! Data save nahi hua.");
       return false;
     }
+    finally {
+      setIsSaving(false); // 🔥 SAVING KHATAM
+    }
   };
 
   const handleSaveItem = async (e) => {
@@ -139,8 +151,71 @@ const AddItemForm = () => {
     navigate(fromPage);
   };
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="bg-white p-6 rounded-lg shadow border max-w-4xl mx-auto animate-pulse">
+          <div className="h-6 bg-gray-300 rounded w-72 mb-6 border-b pb-2"></div>
+
+          <div className="space-y-6">
+            {/* Basic Details Skeleton */}
+            <div>
+              <div className="h-8 bg-gray-100 rounded w-full mb-3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-2">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                  <div className="h-10 bg-gray-100 rounded w-full"></div>
+                </div>
+                <div><div className="h-4 bg-gray-200 rounded w-20 mb-1"></div><div className="h-10 bg-gray-100 rounded w-full"></div></div>
+                <div><div className="h-4 bg-gray-200 rounded w-20 mb-1"></div><div className="h-10 bg-gray-100 rounded w-full"></div></div>
+              </div>
+            </div>
+
+            {/* GST Details Skeleton */}
+            <div>
+              <div className="h-8 bg-purple-50 rounded w-full mb-3 border border-purple-100"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><div className="h-4 bg-purple-200 rounded w-32 mb-1"></div><div className="h-10 bg-gray-100 rounded w-full"></div></div>
+                <div><div className="h-4 bg-purple-200 rounded w-24 mb-1"></div><div className="h-10 bg-gray-100 rounded w-full"></div></div>
+              </div>
+            </div>
+
+            {/* Pricing Details Skeleton */}
+            <div>
+              <div className="h-8 bg-gray-100 rounded w-full mb-3"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><div className="h-4 bg-gray-200 rounded w-32 mb-1"></div><div className="h-10 bg-gray-100 rounded w-full"></div></div>
+                <div><div className="h-4 bg-blue-200 rounded w-40 mb-1"></div><div className="h-10 bg-blue-50 border border-blue-100 rounded w-full"></div></div>
+                <div><div className="h-4 bg-indigo-200 rounded w-48 mb-1"></div><div className="h-10 bg-indigo-50 border border-indigo-100 rounded w-full"></div></div>
+              </div>
+            </div>
+
+            {/* Footer Buttons Skeleton */}
+            <div className="flex justify-between items-center pt-4 border-t mt-6">
+              <div className="h-10 bg-gray-200 rounded w-32"></div>
+              <div className="flex gap-3">
+                <div className="h-10 bg-orange-200 rounded w-36"></div>
+                <div className="h-10 bg-green-200 rounded w-32"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      {isSaving && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center border border-gray-100">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full animate-spin mb-4"></div>
+            <p className="text-lg font-black text-gray-800">Registering Item...</p>
+            <p className="text-xs text-gray-500 font-bold mt-1">Please wait, saving to cloud.</p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white p-6 rounded-lg shadow border max-w-4xl mx-auto">
         <h2 className="text-xl font-bold mb-6 border-b pb-2 text-gray-800">📦 Add New Item (Dual Price & GST Enabled)</h2>
 

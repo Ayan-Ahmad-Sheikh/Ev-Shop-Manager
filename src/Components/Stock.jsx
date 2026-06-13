@@ -14,7 +14,7 @@ const Stock = () => {
 
       try {
         const q = query(
-          collection(db, "items"), 
+          collection(db, "items"),
           where("userId", "==", auth.currentUser.uid)
         );
 
@@ -43,8 +43,8 @@ const Stock = () => {
   // --- SEARCH & FILTER STATES ---
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [stockStatus, setStockStatus] = useState('All'); 
-  const [itemStatus, setItemStatus] = useState('Active'); 
+  const [stockStatus, setStockStatus] = useState('All');
+  const [itemStatus, setItemStatus] = useState('Active');
 
   const categories = ['All', ...new Set(inventory.map(item => item.category).filter(Boolean))];
 
@@ -84,7 +84,77 @@ const Stock = () => {
   });
 
   if (loading) {
-    return <div className="p-10 text-center text-gray-500 font-bold text-lg">⏳ Cloud se Stock list load ho rahi hai...</div>;
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen space-y-6">
+
+        {/* 1. Header Skeleton */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-pulse">
+          <div>
+            <div className="h-8 bg-gray-300 rounded-md w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded-md w-72"></div>
+          </div>
+          <div className="h-10 bg-gray-300 rounded-lg w-36"></div>
+        </div>
+
+        {/* 2. Top Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <div className="h-3 bg-gray-200 rounded w-28 mb-3"></div>
+                <div className="h-8 bg-gray-300 rounded w-20"></div>
+              </div>
+              <div className="h-12 w-12 bg-gray-100 rounded-lg"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* 3. Search & Filters Skeleton */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i}>
+                <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
+                <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Large Table Skeleton */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse">
+          {/* Table Header row */}
+          <div className="flex justify-between border-b border-gray-100 pb-4 mb-4">
+            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div className="h-4 bg-gray-200 rounded w-32"></div>
+            <div className="h-4 bg-gray-200 rounded w-16"></div>
+            <div className="h-4 bg-gray-200 rounded w-16"></div>
+            <div className="h-4 bg-gray-200 rounded w-24"></div>
+            <div className="h-4 bg-gray-200 rounded w-16 hidden md:block"></div>
+          </div>
+
+          {/* Table Data Rows */}
+          {[1, 2, 3, 4, 5, 6, 7].map((row) => (
+            <div key={row} className="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
+              <div>
+                <div className="h-3 bg-gray-200 rounded w-16 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-24"></div>
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-32"></div>
+              <div className="h-6 bg-gray-100 rounded-full w-12"></div>
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-5 bg-blue-50 rounded w-20"></div>
+              <div className="h-8 bg-gray-100 rounded-md w-24 hidden md:block"></div>
+            </div>
+          ))}
+
+          <div className="text-center mt-6">
+            <p className="text-sm font-bold text-gray-400 tracking-wide">⏳ Syncing Inventory Master with Cloud...</p>
+          </div>
+        </div>
+
+      </div>
+    );
   }
 
   return (
@@ -213,43 +283,43 @@ const Stock = () => {
               ) : (
                 filteredInventory.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    
+
                     {/* Code & HSN Code layout */}
                     <td className="p-3.5 text-gray-500 font-mono text-xs space-y-0.5">
                       <div>Code: {item.itemCode || '-'}</div>
                       {item.hsnCode && <div className="text-purple-600 font-bold bg-purple-50 px-1 rounded w-fit">HSN: {item.hsnCode}</div>}
                     </td>
-                    
+
                     <td className="p-3.5 font-bold text-gray-800">{item.name}</td>
-                    
+
                     <td className="p-3.5">
                       <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">{item.category || 'General'}</span>
                     </td>
-                    
+
                     <td className="p-3.5">
                       <span className={`font-black px-2 py-1 rounded text-xs ${item.openingStock <= item.minStock ? 'text-red-700 bg-red-50 border border-red-100' : 'text-green-700 bg-green-50'}`}>
                         {item.openingStock}
                       </span>
                     </td>
-                    
+
                     <td className="p-3.5 text-gray-500 text-xs">
                       {item.primaryUnit} {item.secondaryUnit && <span className="text-[10px] text-gray-400 block">(1 = {item.conversionRate} {item.secondaryUnit})</span>}
                     </td>
-                    
+
                     {/* Sahi line-up pricing fields mapping */}
                     <td className="p-3.5 font-semibold text-gray-600">₹{item.purchasePrice}</td>
-                    
+
                     <td className="p-3.5 font-bold text-blue-600">₹{item.sellingPrice}</td>
-                    
+
                     <td className="p-3.5 font-bold text-indigo-600">₹{item.wholesalePrice || item.sellingPrice}</td>
-                    
+
                     {/* Live Tax Slab badge display */}
                     <td className="p-3.5">
                       <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">
                         {item.gstRate || 0}%
                       </span>
                     </td>
-                    
+
                     {/* Final Net Valuation calculation based on Purchase price asset rate */}
                     <td className="p-3.5 font-black text-green-700">
                       ₹{(item.openingStock * item.purchasePrice).toLocaleString('en-IN')}
@@ -263,7 +333,7 @@ const Stock = () => {
                         👁 View & Adjust
                       </button>
                     </td>
-                    
+
                   </tr>
                 ))
               )}

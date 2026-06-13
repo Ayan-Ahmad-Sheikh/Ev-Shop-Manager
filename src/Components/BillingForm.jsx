@@ -9,6 +9,9 @@ const BillingForm = ({ setBillingMeta }) => {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
 
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const [items, setItems] = useState([]);
@@ -50,6 +53,10 @@ const BillingForm = ({ setBillingMeta }) => {
         setInventory(itemsList.filter(item => item.status !== 'Inactive'));
       } catch (error) {
         console.error("Error fetching stock for billing:", error);
+      }
+      finally {
+        // 🔥 DATA AANE KE BAAD SKELETON HATANE KE LIYE
+        setLoading(false);
       }
     };
     fetchInventory();
@@ -218,6 +225,8 @@ const BillingForm = ({ setBillingMeta }) => {
       return;
     }
 
+    setIsSaving(true);
+
     // 🛑 STEP 1: SAFETY CHECKPOST - Pehle check karo kisi item ka stock bheed mein khatam toh nahi?
     for (const item of items) {
       if (item.productId && item.productId.toString().length > 10) {
@@ -322,10 +331,87 @@ const BillingForm = ({ setBillingMeta }) => {
       console.error("Bill Save Error: ", error);
       toast.error("Error! Bill save nahi hua.");
     }
+    finally {
+      // 🔥 SAVE COMPLETE HOTE HI SCREEN UNLOCK
+      setIsSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow border max-w-5xl mx-auto space-y-6 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-4">
+          <div>
+            <div className="h-6 bg-gray-300 rounded w-56 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-72"></div>
+          </div>
+          <div className="h-10 bg-gray-100 rounded-xl w-full md:w-64 border"></div>
+        </div>
+
+        {/* Customer Fields Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl border">
+          {[1, 2, 3].map((i) => (
+            <div key={i}>
+              <div className="h-3 bg-gray-300 rounded w-24 mb-2"></div>
+              <div className="h-10 bg-white border border-gray-200 rounded w-full"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Table Rows Skeleton */}
+        <div className="space-y-4 md:space-y-2 pt-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-lg border md:border-none md:border-b border-gray-100">
+              <div className="md:grid md:grid-cols-12 gap-4 items-center py-2">
+                <div className="col-span-5 mb-3 md:mb-0"><div className="h-10 bg-white border border-gray-200 rounded w-full"></div></div>
+                <div className="col-span-5 grid grid-cols-3 gap-2 mb-3 md:mb-0">
+                  <div className="h-10 bg-white border border-gray-200 rounded w-full"></div>
+                  <div className="h-10 bg-white border border-gray-200 rounded w-full"></div>
+                  <div className="h-10 bg-white border border-gray-200 rounded w-full"></div>
+                </div>
+                <div className="col-span-2 flex justify-between items-center border-t md:border-none pt-2 md:pt-0">
+                  <div className="h-4 bg-gray-300 rounded w-16 md:ml-auto md:mr-4"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Payment & Summary Skeleton */}
+        <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-12 gap-6 items-start mt-6">
+          <div className="md:col-span-5 bg-gray-50 p-4 rounded-lg border border-gray-100 grid grid-cols-2 gap-4">
+            <div><div className="h-3 bg-gray-300 rounded w-24 mb-2"></div><div className="h-10 bg-white border border-gray-200 rounded w-full"></div></div>
+            <div><div className="h-3 bg-gray-300 rounded w-24 mb-2"></div><div className="h-10 bg-white border border-gray-200 rounded w-full"></div></div>
+          </div>
+          <div className="md:col-span-7 bg-gray-900 p-5 rounded-xl space-y-4 shadow-md">
+            <div className="flex justify-between"><div className="h-3 bg-gray-700 rounded w-32"></div><div className="h-3 bg-gray-700 rounded w-20"></div></div>
+            <div className="flex justify-between border-b border-gray-800 pb-4"><div className="h-3 bg-gray-700 rounded w-10"></div><div className="h-3 bg-gray-700 rounded w-16"></div></div>
+            <div className="flex flex-col md:flex-row justify-between items-center pt-2 gap-4">
+              <div className="h-6 bg-gray-700 rounded w-48"></div>
+              <div className="flex gap-2 w-full md:w-auto"><div className="h-9 bg-gray-800 rounded w-20"></div><div className="h-9 bg-gray-800 rounded w-36"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center pt-2">
+          <p className="text-xs font-bold text-gray-400">⏳ Loading Master Data & Live Inventory...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-4 md:p-6 rounded-lg shadow border max-w-5xl mx-auto space-y-6">
+      {isSaving && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[100] rounded-lg">
+          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center border border-gray-100">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full animate-spin mb-4"></div>
+            <p className="text-lg font-black text-gray-800">Generating Invoice...</p>
+            <p className="text-xs text-gray-500 font-bold mt-1">Please wait, updating stock & ledger.</p>
+          </div>
+        </div>
+      )}
 
       {/* Header Panel */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-4">

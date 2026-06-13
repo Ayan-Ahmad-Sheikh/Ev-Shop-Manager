@@ -86,6 +86,76 @@ const ExpenseTracker = () => {
     return expMonth === currentMonth ? sum + exp.amount : sum;
   }, 0);
 
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen animate-pulse">
+
+        {/* 1. Header Skeleton */}
+        <div className="mb-6 flex justify-between items-center border-b pb-4">
+          <div>
+            <div className="h-8 bg-gray-300 rounded-md w-56 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded-md w-64"></div>
+          </div>
+          {/* This Month Expense Box Skeleton */}
+          <div className="bg-red-50 border border-red-100 p-3 rounded-lg w-40 h-16 shadow-sm">
+            <div className="h-3 bg-red-200 rounded w-24 mb-2 ml-auto"></div>
+            <div className="h-6 bg-red-300 rounded w-28 ml-auto"></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* 2. ADD EXPENSE FORM SKELETON (Left Column) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
+            <div className="h-6 bg-gray-300 rounded w-40 mb-6 border-b pb-2"></div>
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i}>
+                  <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-11 bg-gray-100 rounded-lg w-full"></div>
+                </div>
+              ))}
+              <div className="h-12 bg-red-200 rounded-lg w-full mt-4"></div>
+            </div>
+          </div>
+
+          {/* 3. EXPENSE HISTORY TABLE SKELETON (Right Column) */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-4 border-b bg-gray-50">
+              <div className="h-6 bg-gray-300 rounded w-48"></div>
+            </div>
+
+            <div className="p-4">
+              {/* Table Header */}
+              <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                <div className="h-4 bg-gray-300 rounded w-24"></div>
+                <div className="h-4 bg-gray-300 rounded w-28"></div>
+                <div className="h-4 bg-gray-300 rounded w-40"></div>
+                <div className="h-4 bg-gray-300 rounded w-24 text-right"></div>
+              </div>
+
+              {/* Table Rows */}
+              {[1, 2, 3, 4, 5, 6].map((row) => (
+                <div key={row} className="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-6 bg-gray-100 rounded w-28 border border-gray-200"></div>
+                  <div className="h-4 bg-gray-200 rounded w-48"></div>
+                  <div className="h-5 bg-red-100 rounded w-20"></div>
+                </div>
+              ))}
+
+              {/* Loading Message */}
+              <div className="text-center mt-6">
+                <p className="text-sm font-bold text-gray-400 tracking-wide">⏳ Syncing secure expense records...</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex justify-between items-center">
@@ -138,7 +208,7 @@ const ExpenseTracker = () => {
           <div className="p-4 border-b bg-gray-50">
             <h2 className="text-lg font-bold text-gray-800">Recent Transactions</h2>
           </div>
-          <div className="overflow-x-auto h-[500px] overflow-y-auto">
+          <div className="overflow-x-auto h-125 overflow-y-auto">
             {loading ? (
               <p className="text-center p-10 font-bold text-gray-400">Loading history...</p>
             ) : expenses.length === 0 ? (

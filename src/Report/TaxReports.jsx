@@ -108,7 +108,87 @@ const TaxReports = () => {
     const totalOperatingExpenses = currentMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     const netProfit = grossProfit - totalOperatingExpenses;
 
-    if (loading) return <div className="p-10 text-center font-bold text-gray-500">⏳ Generating Tax Reports...</div>;
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 bg-gray-50 min-h-screen animate-pulse">
+
+                {/* 1. Header & Controls Skeleton */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-200 pb-4">
+                    <div>
+                        <div className="h-8 bg-gray-300 rounded-md w-72 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded-md w-96 max-w-full"></div>
+                    </div>
+                    <div className="h-10 bg-white border border-gray-200 rounded-lg w-48"></div>
+                </div>
+
+                {/* 2. Tabs Navigation Skeleton */}
+                <div className="flex bg-gray-200 p-1 rounded-xl w-fit mb-6 shadow-inner gap-2">
+                    <div className="h-10 bg-white rounded-lg w-36 shadow-sm"></div>
+                    <div className="h-10 bg-gray-300 rounded-lg w-36"></div>
+                    <div className="h-10 bg-gray-300 rounded-lg w-36"></div>
+                </div>
+
+                {/* 3. GSTR-1 Summary Cards Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="h-3 bg-gray-200 rounded w-28 mb-3"></div>
+                        <div className="h-8 bg-indigo-100 rounded w-32 mb-2"></div>
+                        <div className="h-2 bg-gray-100 rounded w-24"></div>
+                    </div>
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                        <div className="h-3 bg-gray-200 rounded w-28 mb-3"></div>
+                        <div className="h-8 bg-cyan-100 rounded w-32 mb-2"></div>
+                        <div className="h-2 bg-gray-100 rounded w-24"></div>
+                    </div>
+                    {/* Dark Theme Card Skeleton */}
+                    <div className="bg-gray-900 p-5 rounded-xl shadow-sm border border-gray-800 md:col-span-2 flex justify-between items-center">
+                        <div>
+                            <div className="h-3 bg-gray-600 rounded w-40 mb-3"></div>
+                            <div className="h-8 bg-gray-700 rounded w-48"></div>
+                        </div>
+                        <div className="space-y-2 text-right">
+                            <div className="h-3 bg-gray-700 rounded w-20 ml-auto"></div>
+                            <div className="h-3 bg-gray-700 rounded w-20 ml-auto"></div>
+                            <div className="h-3 bg-gray-700 rounded w-20 ml-auto"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. Sales Register Table Skeleton */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <div className="h-6 bg-gray-300 rounded w-64 mb-6 border-b pb-2"></div>
+
+                    {/* Table Header */}
+                    <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                        <div className="h-4 bg-gray-300 rounded w-20"></div>
+                        <div className="h-4 bg-gray-300 rounded w-16"></div>
+                        <div className="h-4 bg-gray-300 rounded w-32"></div>
+                        <div className="h-4 bg-gray-300 rounded w-24 text-right"></div>
+                        <div className="h-4 bg-gray-300 rounded w-20 text-right"></div>
+                        <div className="h-4 bg-gray-300 rounded w-24 text-right"></div>
+                    </div>
+
+                    {/* Table Rows */}
+                    {[1, 2, 3, 4, 5].map((row) => (
+                        <div key={row} className="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
+                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            <div className="h-5 bg-indigo-50 rounded w-12"></div>
+                            <div className="h-4 bg-gray-200 rounded w-32"></div>
+                            <div className="h-4 bg-gray-200 rounded w-20"></div>
+                            <div className="h-4 bg-red-50 rounded w-16"></div>
+                            <div className="h-5 bg-gray-200 rounded w-24"></div>
+                        </div>
+                    ))}
+
+                    {/* Loading Text */}
+                    <div className="text-center mt-6">
+                        <p className="text-sm font-bold text-gray-400 tracking-wide">⏳ Compiling secure tax data & GSTR ledgers...</p>
+                    </div>
+                </div>
+
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-6 bg-gray-50 min-h-screen">

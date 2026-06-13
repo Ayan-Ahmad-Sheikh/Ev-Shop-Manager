@@ -28,7 +28,7 @@ const CustomerLedger = () => {
 
         // collection() ki jagah 'q' pass kiya hai
         const querySnapshot = await getDocs(q);
-        
+
         const customerList = querySnapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
           .filter(c => c.totalDue > 0); // Sirf wahi dikhao jin par udhar baaki hai
@@ -112,7 +112,77 @@ const CustomerLedger = () => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold text-gray-500">⏳ Loading Khata Book...</div>;
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen relative">
+
+        {/* 1. Header & Filter Badges Skeleton */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 gap-4 mb-6 animate-pulse">
+          <div>
+            <div className="h-8 bg-gray-300 rounded-md w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded-md w-80"></div>
+          </div>
+          <div className="h-10 bg-gray-200 rounded-xl w-full sm:w-80"></div>
+        </div>
+
+        {/* 2. Top Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-pulse">
+          {/* Due Card Skeleton */}
+          <div className="bg-red-50 p-6 rounded-xl border border-red-100 flex items-center justify-between shadow-sm">
+            <div>
+              <div className="h-3 bg-red-200 rounded w-32 mb-3"></div>
+              <div className="h-8 bg-red-300 rounded w-40"></div>
+            </div>
+            <div className="h-12 w-12 bg-red-100 rounded-lg"></div>
+          </div>
+          {/* Count Card Skeleton */}
+          <div className="bg-white p-6 rounded-xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div>
+              <div className="h-3 bg-gray-200 rounded w-40 mb-3"></div>
+              <div className="h-8 bg-gray-300 rounded w-16"></div>
+            </div>
+            <div className="h-12 w-12 bg-gray-100 rounded-lg"></div>
+          </div>
+        </div>
+
+        {/* 3. Search Bar Skeleton */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 animate-pulse">
+          <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+        </div>
+
+        {/* 4. Ledger Table Skeleton */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+          {/* Table Header */}
+          <div className="flex justify-between items-center bg-gray-50 border-b border-gray-100 p-4">
+            <div className="h-3 bg-gray-300 rounded w-40"></div>
+            <div className="h-3 bg-gray-300 rounded w-24"></div>
+            <div className="h-3 bg-gray-300 rounded w-20"></div>
+            <div className="h-3 bg-gray-300 rounded w-32 text-right"></div>
+            <div className="h-3 bg-gray-300 rounded w-16"></div>
+          </div>
+
+          {/* Table Rows */}
+          {[1, 2, 3, 4, 5].map((row) => (
+            <div key={row} className="flex justify-between items-center p-4 border-b border-gray-50 last:border-0">
+              <div>
+                <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
+                <div className="h-3 bg-blue-100 rounded w-24"></div>
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-6 bg-red-100 rounded w-28"></div>
+              <div className="h-8 bg-green-100 rounded-lg w-24"></div>
+            </div>
+          ))}
+
+          <div className="text-center p-6 mt-2">
+            <p className="text-sm font-bold text-gray-400 tracking-wide">⏳ Retrieving Khata Book from Secure Cloud...</p>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen relative">

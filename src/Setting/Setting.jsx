@@ -65,7 +65,7 @@ const Settings = () => {
         e.preventDefault();
         if (!auth.currentUser) return;
         const userId = auth.currentUser.uid;
-        
+
         setSaving(true);
         try {
             // 👉 updateDoc ki jagah setDoc use kiya hai
@@ -73,7 +73,7 @@ const Settings = () => {
                 ...shopDetails,
                 userId: userId
             }, { merge: true });
-            
+
             toast.success("✅ Shop Profile Updated Successfully!");
         } catch (error) {
             console.error("Error updating profile:", error);
@@ -94,7 +94,7 @@ const Settings = () => {
                 ...invoiceSettings,
                 userId: userId
             }, { merge: true });
-            
+
             toast.success("✅ Invoice Settings Saved!");
         } catch (error) {
             console.error("Error saving invoice rules", error);
@@ -117,7 +117,94 @@ const Settings = () => {
         toast.loading(`📥 Downloading ${type} Data as Excel/CSV... (Backend integration required)`);
     };
 
-    if (loading) return <div className="p-10 text-center font-bold text-gray-500">⏳ Loading Settings...</div>;
+    if (loading) {
+        return (
+            <div className="p-4 md:p-6 bg-gray-50 min-h-screen animate-pulse">
+
+                {/* 1. Header Skeleton */}
+                <div className="mb-6">
+                    <div className="h-8 bg-gray-300 rounded-md w-48 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded-md w-72"></div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* LEFT COLUMN Skeleton */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Shop Profile Skeleton */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <div className="h-6 bg-gray-300 rounded w-48 mb-6 border-b pb-2"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <div key={i}>
+                                        <div className="h-3 bg-gray-200 rounded w-24 mb-2"></div>
+                                        <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+                                    </div>
+                                ))}
+                                <div className="md:col-span-2">
+                                    <div className="h-3 bg-gray-200 rounded w-32 mb-2"></div>
+                                    <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <div className="h-3 bg-gray-200 rounded w-40 mb-2"></div>
+                                    <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+                                </div>
+                            </div>
+                            <div className="text-right pt-4 mt-2">
+                                <div className="h-10 bg-blue-200 rounded-lg w-32 ml-auto"></div>
+                            </div>
+                        </div>
+
+                        {/* Invoice Rules Skeleton */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <div className="h-6 bg-gray-300 rounded w-48 mb-6 border-b pb-2"></div>
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="h-3 bg-gray-200 rounded w-32 mb-2"></div>
+                                    <div className="h-10 bg-gray-100 rounded-lg w-1/3"></div>
+                                </div>
+                                <div>
+                                    <div className="h-3 bg-gray-200 rounded w-48 mb-2"></div>
+                                    <div className="h-24 bg-gray-100 rounded-lg w-full"></div>
+                                </div>
+                                <div className="text-right pt-2">
+                                    <div className="h-10 bg-blue-200 rounded-lg w-32 ml-auto"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN Skeleton */}
+                    <div className="space-y-6">
+
+                        {/* Security Skeleton */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-red-50">
+                            <div className="h-6 bg-red-200 rounded w-32 mb-6 border-b pb-2"></div>
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-48"></div>
+                                </div>
+                                <div className="h-10 bg-red-100 rounded-lg w-full mt-4"></div>
+                            </div>
+                        </div>
+
+                        {/* Backup Skeleton */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-green-50">
+                            <div className="h-6 bg-green-200 rounded w-32 mb-6 border-b pb-2"></div>
+                            <div className="h-10 bg-green-200 rounded-lg w-full mt-4"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div className="text-center mt-4">
+                    <p className="text-xs font-bold text-gray-400">⏳ Fetching Admin Controls & Configuration...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
