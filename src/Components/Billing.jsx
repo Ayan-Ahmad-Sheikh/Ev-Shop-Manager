@@ -173,48 +173,28 @@ Thank you for visiting!`;
 
   const handlePDFShare = async (bill) => {
     const element = document.getElementById('real-invoice-content');
-
-    if (!element) {
-      toast.error("Invoice layout nahi mila!");
-      return;
-    }
+    if (!element) return toast.error("Invoice layout nahi mila!");
 
     const toastId = toast.loading("PDF ban raha hai, kripya pratiksha karein...");
-    let tempDiv = null;
 
     try {
-      // 🚀 ULTIMATE FIX: Off-Screen Rendering
-      // Invoice ko modal se bahar nikal kar secretly body me dalenge 
-      tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px'; // Screen ke bahar chupao
-      tempDiv.style.top = '0';
-      tempDiv.style.width = '800px'; // Pakka Desktop Width (Grid bachane ke liye)
-      tempDiv.style.backgroundColor = '#ffffff';
-      tempDiv.style.zIndex = '-1';
+      // Sirf usi jagah par width 800px fix karenge aadhi second ke liye
+      const originalWidth = element.style.width;
+      element.style.width = '800px';
 
-      // Original invoice ki copy banake isme daalo
-      const clone = element.cloneNode(true);
-      tempDiv.appendChild(clone);
-      document.body.appendChild(tempDiv);
-
-      // Ab photo khincho is naye, azaad aur fixed size wale element ki
-      const canvas = await html2canvas(clone, {
+      const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         windowWidth: 800
       });
 
-      // Photo khinchte hi kachra saaf kar do taaki mobile hang na ho
-      if (document.body.contains(tempDiv)) {
-        document.body.removeChild(tempDiv);
-      }
+      element.style.width = originalWidth; // Wapas normal
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      const margin = 12; // 12mm ka margin
+      const margin = 12;
       const pdfPageWidth = pdf.internal.pageSize.getWidth();
       const pdfPageHeight = pdf.internal.pageSize.getHeight();
 
@@ -236,7 +216,6 @@ Thank you for visiting!`;
         heightLeft -= usablePageHeight;
       }
 
-      // File Name Setup
       const finalBillId = String(bill.id).startsWith(invoicePrefix) ? String(bill.id) : `${invoicePrefix}${bill.id}`;
       const safeBillId = finalBillId.replace(/[\/\\]/g, '_');
       const fileName = `Invoice_${safeBillId}.pdf`;
@@ -244,33 +223,25 @@ Thank you for visiting!`;
       toast.dismiss(toastId);
 
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
       if (isMobile && navigator.canShare) {
         const pdfBlob = pdf.output('blob');
         const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-
         try {
           await navigator.share({
             files: [file],
             title: `Invoice ${finalBillId}`,
-            text: `Hi ${bill.customerName}, please find your attached document from ${shopDetails.shopName}.`
+            text: `Hi ${bill.customerName}, attached is your invoice from ${shopDetails.shopName}.`
           });
-        } catch (shareError) {
-          console.log("Share timeout/cancelled. Falling back to download.");
+        } catch (err) {
           pdf.save(fileName);
         }
       } else {
         pdf.save(fileName);
       }
-
     } catch (error) {
-      console.error("Direct PDF generation failed:", error);
-      // Agar error aaye toh bhi kachra saaf karna zaroori hai
-      if (tempDiv && document.body.contains(tempDiv)) {
-        document.body.removeChild(tempDiv);
-      }
+      console.error(error);
       toast.dismiss(toastId);
-      toast.error(`Bhai, PDF banane me dikkat aayi: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     }
   };
 
@@ -480,43 +451,42 @@ Thank you for visiting!`;
                   {isEstimateMode ? 'Sale Invoice' : 'TAX INVOICE'}
                 </div>
 
-                <div className="grid grid-cols-12 border-b border-black">
-                  <div className="col-span-6 p-2 border-r border-black space-y-1">
+                {/* HEADER ROW - CHANGED TO FLEX */}
+                <div className="flex border-b border-black w-full">
+                  <div className="w-1/2 p-2 border-r border-black space-y-1">
                     <h2 className="font-black text-base uppercase tracking-wide text-gray-900">{shopDetails.shopName || 'YOUR BUSINESS NAME'}</h2>
                     <p className="text-[11px] font-medium text-gray-700 leading-tight whitespace-pre-wrap">{shopDetails.address}</p>
                     <p className="text-[11px] font-medium">Contact: +91 {shopDetails.phone}</p>
-                    {/* Kaccha bill me GSTIN hide */}
                     {(!isEstimateMode && shopDetails.gstin) && (
                       <p className="font-black text-[11px] text-gray-900 font-mono mt-1">GSTIN/UIN: {shopDetails.gstin}</p>
                     )}
                   </div>
 
-                  <div className="col-span-6 grid grid-cols-2">
-                    <div className="p-2 border-r border-b border-black">
+                  <div className="w-1/2 flex flex-wrap">
+                    <div className="w-1/2 p-2 border-r border-b border-black">
                       <p className="text-[10px] text-gray-500 font-bold">Document No.</p>
-                      {/* 🔥 SMART PREFIX LOGIC */}
                       <p className="font-black text-gray-900 font-mono text-sm">
                         {String(selectedBill.id).startsWith(invoicePrefix) ? selectedBill.id : `${invoicePrefix}${selectedBill.id}`}
                       </p>
                     </div>
-                    <div className="p-2 border-b border-black">
+                    <div className="w-1/2 p-2 border-b border-black">
                       <p className="text-[10px] text-gray-500 font-bold">Dated</p>
                       <p className="font-black text-gray-900 font-mono text-sm">{selectedBill.date}</p>
                     </div>
-                    <div className="p-2 border-r border-black">
+                    <div className="w-1/2 p-2 border-r border-black">
                       <p className="text-[10px] text-gray-500 font-bold">Buyer's Ref./Order No.</p>
-                      {/* 🔥 FIXED REFERENCE NUMBER */}
-                      <p className="font-bold text-gray-800">N/A (Direct Walk-in)</p>
+                      <p className="font-bold text-gray-800">N/A (Walk-in)</p>
                     </div>
-                    <div className="p-2">
+                    <div className="w-1/2 p-2">
                       <p className="text-[10px] text-gray-500 font-bold">Mode of Payment</p>
                       <p className="font-black uppercase text-gray-800">{selectedBill.paymentMode}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-12 border-b border-black bg-gray-50/30">
-                  <div className="col-span-6 p-2 border-r border-black space-y-0.5">
+                {/* CUSTOMER ROW - CHANGED TO FLEX */}
+                <div className="flex border-b border-black bg-gray-50/30 w-full">
+                  <div className="w-1/2 p-2 border-r border-black space-y-0.5">
                     <p className="text-[10px] text-gray-400 font-bold uppercase">Customer (Bill to)</p>
                     <p className="font-black text-gray-900 text-sm uppercase">{selectedBill.customerName}</p>
                     <p className="text-gray-600 font-medium">📞 Phone: {selectedBill.phone}</p>
@@ -527,14 +497,13 @@ Thank you for visiting!`;
                     )}
                   </div>
 
-                  <div className="col-span-6 p-2 grid grid-cols-2 gap-1 text-[11px]">
-                    <div className="col-span-2">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Destination / Logistics</p>
-                      <p className="font-black uppercase text-gray-800">{selectedBill.destination || 'LOCAL'} | {selectedBill.transportName || 'HAND DELIVERY'}</p>
-                    </div>
+                  <div className="w-1/2 p-2">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">Destination / Logistics</p>
+                    <p className="font-black uppercase text-gray-800">{selectedBill.destination || 'LOCAL'} | {selectedBill.transportName || 'HAND DELIVERY'}</p>
                   </div>
                 </div>
 
+                {/* TABLE - REMAINS SAME AS HTML TABLES WORK PERFECTLY */}
                 <table className="w-full text-left border-collapse border-b border-black text-[11px]">
                   <thead>
                     <tr className="border-b border-black bg-gray-100 font-bold text-center">
@@ -547,7 +516,6 @@ Thank you for visiting!`;
                   </thead>
                   <tbody className="divide-y divide-black/30">
                     {selectedBill.items.map((item, idx) => {
-                      // SMART MATH FOR ESTIMATE MODE
                       const taxRate = item.refData?.gstRate || 18;
                       const displayPrice = isEstimateMode ? (item.price * (1 + taxRate / 100)) : item.price;
                       const displayAmount = item.qty * displayPrice;
@@ -569,20 +537,17 @@ Thank you for visiting!`;
                   </tbody>
                 </table>
 
-                <div className="grid grid-cols-12 p-2 bg-gray-50/50 items-center">
-                  <div className="col-span-7 text-[10px] text-gray-500 font-semibold space-y-1">
+                {/* TOTALS ROW - CHANGED TO FLEX */}
+                <div className="flex p-2 bg-gray-50/50 items-center w-full border-b border-black">
+                  <div className="w-7/12 text-[10px] text-gray-500 font-semibold space-y-1">
                     <p className="font-bold text-gray-800">Note:</p>
                     <p>{isEstimateMode ? 'This is an estimate/quotation and not a tax invoice.' : 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.'}</p>
                   </div>
 
-                  <div className="col-span-5 text-xs space-y-1 font-medium pl-6">
-
+                  <div className="w-5/12 text-xs space-y-1 font-medium pl-6">
                     {!isEstimateMode && (
                       <>
-                        <div className="flex justify-between text-gray-600">
-                          <span>Taxable Value:</span>
-                          <span className="font-mono font-bold">₹{(selectedBill.subTotal || 0).toFixed(2)}</span>
-                        </div>
+                        <div className="flex justify-between text-gray-600"><span>Taxable Value:</span><span className="font-mono font-bold">₹{(selectedBill.subTotal || 0).toFixed(2)}</span></div>
                         {selectedBill.isLocal ? (
                           <>
                             <div className="flex justify-between text-gray-500 text-[11px]"><span>CGST:</span><span className="font-mono">₹{(selectedBill.cgst || 0).toFixed(2)}</span></div>
@@ -593,14 +558,8 @@ Thank you for visiting!`;
                         )}
                       </>
                     )}
-
-                    {selectedBill.serviceCharge > 0 && (
-                      <div className="flex justify-between text-blue-600 text-[11px]"><span>Labour / Fitting:</span><span className="font-mono">₹{selectedBill.serviceCharge.toFixed(2)}</span></div>
-                    )}
-                    {selectedBill.discount > 0 && (
-                      <div className="flex justify-between text-red-600 text-[11px]"><span>Discount:</span><span className="font-mono">-₹{selectedBill.discount.toFixed(2)}</span></div>
-                    )}
-
+                    {selectedBill.serviceCharge > 0 && <div className="flex justify-between text-blue-600 text-[11px]"><span>Labour / Fitting:</span><span className="font-mono">₹{selectedBill.serviceCharge.toFixed(2)}</span></div>}
+                    {selectedBill.discount > 0 && <div className="flex justify-between text-red-600 text-[11px]"><span>Discount:</span><span className="font-mono">-₹{selectedBill.discount.toFixed(2)}</span></div>}
                     <div className="flex justify-between font-black text-gray-900 pt-1 text-sm border-t border-black">
                       <span>Total Amount:</span>
                       <span className="font-mono text-green-800 text-base">₹{(selectedBill.grandTotal || 0).toFixed(2)}</span>
@@ -608,9 +567,10 @@ Thank you for visiting!`;
                   </div>
                 </div>
 
-                <div className="grid grid-cols-12 border-t border-black min-h-12.5 text-[10px]">
-                  <div className="col-span-6 p-2 border-r border-black flex items-end text-gray-400 font-bold">Customer Sign</div>
-                  <div className="col-span-6 p-2 text-right flex flex-col justify-between items-end">
+                {/* SIGNATURE ROW - CHANGED TO FLEX */}
+                <div className="flex min-h-[50px] text-[10px] w-full">
+                  <div className="w-1/2 p-2 border-r border-black flex items-end text-gray-400 font-bold">Customer Sign</div>
+                  <div className="w-1/2 p-2 text-right flex flex-col justify-between items-end">
                     <p className="font-bold text-gray-500 uppercase">for {shopDetails.shopName || 'YOUR BUSINESS NAME'}</p>
                     <p className="font-bold text-gray-900 mt-6">Authorised Signatory</p>
                   </div>
