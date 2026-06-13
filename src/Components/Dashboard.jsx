@@ -16,21 +16,21 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkShopData = async () => {
-            if (auth.currentUser) {
-                // 🔥 Tumhari shop setup wali collection ka jo bhi naam hai (jaise 'users' ya 'shopSetup')
-                const docRef = doc(db, "users", auth.currentUser.uid);
-                const docSnap = await getDoc(docRef);
+    const checkShopData = async () => {
+      if (auth.currentUser) {
+        // 🔥 FIX: Ab Dashboard wahi check karega jahan SetupShop ne data save kiya hai!
+        const docRef = doc(db, "settings", `shopDetails_${auth.currentUser.uid}`); 
+        const docSnap = await getDoc(docRef);
 
-                if (!docSnap.exists()) {
-                    // Agar database me dukan ka data nahi mila, toh seedha setup page par bhejo
-                    navigate('/setup-shop');
-                }
-            }
-        };
+        if (!docSnap.exists()) {
+          // Agar dukan ka data nahi mila tabhi wapas bhejo
+          navigate('/setup-shop');
+        }
+      }
+    };
 
-        checkShopData();
-    }, [navigate]);
+    checkShopData();
+  }, [navigate]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
