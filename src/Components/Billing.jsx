@@ -180,54 +180,60 @@ Thank you for visiting!`;
     }
 
     try {
-      // Mobile par perfect width laane ke liye
-      const originalWidth = element.style.width;
-      const originalMaxWidth = element.style.maxWidth;
-      element.style.width = '800px';
-      element.style.maxWidth = 'none';
+      // PDF banne me 1-2 second lagte hain, isliye user ko bata rahe hain
+      const toastId = toast.loading("PDF ban raha hai, kripya pratiksha karein...");
 
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        scrollY: -window.scrollY,
-        windowWidth: 800
-      });
+        windowWidth: 800, // Background me desktop size set karega
+        onclone: (clonedDoc) => {
+          // 🔥 FIX: Hidden copy ko zabardasti Desktop size aur layout dena
+          const clonedElement = clonedDoc.getElementById('real-invoice-content');
+          clonedElement.style.width = '800px';
+          clonedElement.style.minWidth = '800px';
+          clonedElement.style.maxWidth = '800px';
 
-      element.style.width = originalWidth;
-      element.style.maxWidth = originalMaxWidth;
+          // Parent element ko bhi lock kar do taaki mobile usko dabaye na
+          if (clonedElement.parentNode) {
+            clonedElement.parentNode.style.width = '800px';
+            clonedElement.parentNode.style.minWidth = '800px';
+          }
+        }
+      });
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      const margin = 12; // 12mm ka margin dono side
+      const margin = 12; // 12mm ka side margin
       const pdfPageWidth = pdf.internal.pageSize.getWidth();
-      const pdfPageHeight = pdf.internal.pageSize.getHeight(); // A4 page ki total height
+      const pdfPageHeight = pdf.internal.pageSize.getHeight();
 
       const pdfImageWidth = pdfPageWidth - (margin * 2);
       const pdfImageHeight = (canvas.height * pdfImageWidth) / canvas.width;
 
-      // 🔥 FIX: MULTI-PAGE LOGIC (Agar bill lamba hai toh aage ke pages add karo)
+      // MULTI-PAGE LOGIC (Lamba bill aage ke pages pe jayega)
       let heightLeft = pdfImageHeight;
-      let position = margin; // Pehla page top margin se shuru hoga
+      let position = margin;
       const usablePageHeight = pdfPageHeight - (margin * 2);
 
-      // Pehla page add karo
       pdf.addImage(imgData, 'JPEG', margin, position, pdfImageWidth, pdfImageHeight);
-      heightLeft -= usablePageHeight; // Jo height print ho gayi, usko minus karo
+      heightLeft -= usablePageHeight;
 
-      // Jab tak aur height bachi hai, naya page banate jao
       while (heightLeft > 0) {
-        position = position - usablePageHeight; // Image ko ek page utna upar shift karo
+        position = position - usablePageHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', margin, position, pdfImageWidth, pdfImageHeight);
         heightLeft -= usablePageHeight;
       }
 
-      // Prefix check for filename
+      // File ka naam set karna
       const finalBillId = String(bill.id).startsWith(invoicePrefix) ? String(bill.id) : `${invoicePrefix}${bill.id}`;
       const safeBillId = finalBillId.replace(/[\/\\]/g, '_');
       const fileName = `Invoice_${safeBillId}.pdf`;
+
+      toast.dismiss(toastId); // PDF ban gaya toh loading hata do
 
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -251,6 +257,7 @@ Thank you for visiting!`;
 
     } catch (error) {
       console.error("Direct PDF generation failed:", error);
+      toast.dismiss();
       toast.error(`Bhai, PDF banane me dikkat aayi: ${error.message}`);
     }
   };
