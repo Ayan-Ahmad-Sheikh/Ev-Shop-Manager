@@ -27,7 +27,7 @@ const Welcome = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
           <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight mb-6">
             Smart Billing & Inventory for <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">
               EV Spare Parts Business
             </span>
           </h1>

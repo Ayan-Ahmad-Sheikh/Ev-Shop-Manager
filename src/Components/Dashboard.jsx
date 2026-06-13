@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { db, auth } from '../Firebase/firebaseConfig';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -14,6 +14,23 @@ const Dashboard = () => {
     const [allExpenses, setAllExpenses] = useState([]); // 🔥 NEW STATE: Saare kharche store karne ke liye
     const [totalUdhar, setTotalUdhar] = useState(0);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkShopData = async () => {
+            if (auth.currentUser) {
+                // 🔥 Tumhari shop setup wali collection ka jo bhi naam hai (jaise 'users' ya 'shopSetup')
+                const docRef = doc(db, "users", auth.currentUser.uid);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    // Agar database me dukan ka data nahi mila, toh seedha setup page par bhejo
+                    navigate('/setup-shop');
+                }
+            }
+        };
+
+        checkShopData();
+    }, [navigate]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
