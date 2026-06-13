@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -32,12 +32,14 @@ const Billing = () => {
     // 1. Ek sath Shop Details aur Prefix (Rules) fetch karenge
     const fetchSettings = async () => {
       try {
-        const shopDoc = await getDoc(doc(db, "settings", "shopDetails"));
+        const userId = auth.currentUser.uid;
+        const shopDoc = await getDoc(doc(db, "settings", `shopDetails_${userId}`));
+        const rulesDoc = await getDoc(doc(db, "settings", `invoiceRules_${userId}`));
+        
         if (shopDoc.exists()) {
           setShopDetails(prev => ({ ...prev, ...shopDoc.data() }));
         }
 
-        const rulesDoc = await getDoc(doc(db, "settings", "invoiceRules"));
         if (rulesDoc.exists() && rulesDoc.data().billPrefix) {
           setInvoicePrefix(rulesDoc.data().billPrefix);
         }
@@ -48,8 +50,16 @@ const Billing = () => {
 
     // 2. Bills History fetch karenge
     const fetchBills = async () => {
+      if (!auth.currentUser) return;
+
       try {
-        const querySnapshot = await getDocs(collection(db, "bills"));
+
+        const q = query(
+          collection(db, "bills"),
+          where("userId", "==", auth.currentUser.uid)
+        );
+
+        const querySnapshot = await getDocs(q);
         const billsList = querySnapshot.docs.map(doc => {
           const data = doc.data();
           const isPaid = data.remainingUdhar === 0;
@@ -524,7 +534,7 @@ const Billing = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-12 border-t border-black min-h-[50px] text-[10px]">
+                <div className="grid grid-cols-12 border-t border-black min-h-12.5 text-[10px]">
                   <div className="col-span-6 p-2 border-r border-black flex items-end text-gray-400 font-bold">Customer Sign</div>
                   <div className="col-span-6 p-2 text-right flex flex-col justify-between items-end">
                     <p className="font-bold text-gray-500 uppercase">for {shopDetails.shopName || 'YOUR BUSINESS NAME'}</p>

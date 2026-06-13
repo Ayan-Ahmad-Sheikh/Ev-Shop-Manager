@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -17,26 +17,35 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchDashboardData = async () => {
+            // 👉 Agar login nahi hai, toh aage mat badho
+            if (!auth.currentUser) return;
+
             try {
-                // A. Stock data laayein
-                const invSnap = await getDocs(collection(db, "items"));
+                const userId = auth.currentUser.uid;
+
+                // A. Stock data laayein (Sirf apna)
+                const invQuery = query(collection(db, "items"), where("userId", "==", userId));
+                const invSnap = await getDocs(invQuery);
                 setInventory(invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-                // B. Bills data laayein
-                const billsSnap = await getDocs(collection(db, "bills"));
+                // B. Bills data laayein (Sirf apna)
+                const billsQuery = query(collection(db, "bills"), where("userId", "==", userId));
+                const billsSnap = await getDocs(billsQuery);
                 const billsList = billsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 billsList.sort((a, b) => new Date(b.billDate) - new Date(a.billDate));
                 setRecentBills(billsList.slice(0, 5));
                 setAllBills(billsList);
 
-                // 🔥 C. NEW: Expenses data live laayein
-                const expSnap = await getDocs(collection(db, "expenses"));
+                // 🔥 C. NEW: Expenses data live laayein (Sirf apna)
+                const expQuery = query(collection(db, "expenses"), where("userId", "==", userId));
+                const expSnap = await getDocs(expQuery);
                 const expList = expSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setAllExpenses(expList);
 
-                // D. Customers ka Udhar laayein
-                const custSnap = await getDocs(collection(db, "customers"));
+                // D. Customers ka Udhar laayein (Sirf apna)
+                const custQuery = query(collection(db, "customers"), where("userId", "==", userId));
+                const custSnap = await getDocs(custQuery);
                 let udharSum = 0;
                 custSnap.forEach(doc => { udharSum += (doc.data().totalDue || 0); });
                 setTotalUdhar(udharSum);

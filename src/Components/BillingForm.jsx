@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs, addDoc, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, addDoc, doc, getDoc, updateDoc, setDoc, query, where } from 'firebase/firestore';
 
 // 💡 PROPS UPDATE: User ke naye requirements ke mutabik 'setBillingMeta' callback receive kiya
 const BillingForm = ({ setBillingMeta }) => {
@@ -29,12 +29,24 @@ const BillingForm = ({ setBillingMeta }) => {
 
   useEffect(() => {
     const fetchInventory = async () => {
+      // 👉 Agar login nahi hai, toh aage mat badho
+      if (!auth.currentUser) return;
+
       try {
-        const querySnapshot = await getDocs(collection(db, "items"));
+        // 👉 YAHAN QUERY ADD KI HAI (Sirf apna stock laane ke liye)
+        const q = query(
+          collection(db, "items"),
+          where("userId", "==", auth.currentUser.uid)
+        );
+
+        // collection() ki jagah 'q' pass kiya hai
+        const querySnapshot = await getDocs(q);
+
         const itemsList = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
+
         setInventory(itemsList.filter(item => item.status !== 'Inactive'));
       } catch (error) {
         console.error("Error fetching stock for billing:", error);
@@ -253,7 +265,8 @@ const BillingForm = ({ setBillingMeta }) => {
         paymentMode: paymentMode,
         amountPaid: paymentMode === 'Split' ? parseFloat(amountPaid) : grandTotal,
         remainingUdhar: remainingUdhar,
-        billDate: new Date().toISOString()
+        billDate: new Date().toISOString(),
+        userId: auth.currentUser ? auth.currentUser.uid : null
       };
 
       const docRef = await addDoc(collection(db, "bills"), billData);
@@ -297,7 +310,8 @@ const BillingForm = ({ setBillingMeta }) => {
             name: customerName || 'Cash Customer',
             phone: customerPhone || '',
             totalDue: remainingUdhar,
-            lastUpdate: todayDate
+            lastUpdate: todayDate,
+            userId: auth.currentUser ? auth.currentUser.uid : null
           });
         }
       }

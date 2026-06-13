@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
 
 const CustomerLedger = () => {
   const [customers, setCustomers] = useState([]);
@@ -18,8 +18,17 @@ const CustomerLedger = () => {
 
   useEffect(() => {
     const fetchLedger = async () => {
+      if (!auth.currentUser) return;
+
       try {
-        const querySnapshot = await getDocs(collection(db, "customers"));
+        const q = query(
+          collection(db, "customers"),
+          where("userId", "==", auth.currentUser.uid)
+        );
+
+        // collection() ki jagah 'q' pass kiya hai
+        const querySnapshot = await getDocs(q);
+        
         const customerList = querySnapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
           .filter(c => c.totalDue > 0); // Sirf wahi dikhao jin par udhar baaki hai

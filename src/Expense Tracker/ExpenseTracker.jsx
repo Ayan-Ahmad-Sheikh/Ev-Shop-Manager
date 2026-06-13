@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, addDoc, getDocs, query, orderBy, where } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 const ExpenseTracker = () => {
@@ -24,9 +24,16 @@ const ExpenseTracker = () => {
   ];
 
   const fetchExpenses = async () => {
+    if (!auth.currentUser) return;
+
     setLoading(true);
     try {
-      const q = query(collection(db, "expenses"), orderBy("date", "desc"));
+      const q = query(
+        collection(db, "expenses"),
+        where("userId", "==", auth.currentUser.uid),
+        orderBy("date", "desc")
+      );
+
       const snap = await getDocs(q);
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setExpenses(list);
@@ -54,16 +61,17 @@ const ExpenseTracker = () => {
         category,
         description: description || 'N/A',
         date: expenseDate,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        userId: auth.currentUser ? auth.currentUser.uid : null
       };
 
       await addDoc(collection(db, "expenses"), newExpense);
       toast.success("✅ Kharcha add ho gaya!");
-      
+
       // Reset form
       setAmount('');
       setDescription('');
-      
+
       // Refresh list
       fetchExpenses();
     } catch (error) {
@@ -92,7 +100,7 @@ const ExpenseTracker = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* ADD EXPENSE FORM */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
           <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4">Add New Expense</h2>
@@ -101,7 +109,7 @@ const ExpenseTracker = () => {
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Amount (₹)</label>
               <input type="number" required className="w-full border p-2.5 rounded-lg bg-gray-50 text-lg font-black text-gray-800 focus:ring-2 focus:ring-blue-500" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
-            
+
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
               <select className="w-full border p-2.5 rounded-lg bg-gray-50 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500" value={category} onChange={(e) => setCategory(e.target.value)}>

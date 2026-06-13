@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { db } from '../Firebase/firebaseConfig';
+import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast'; // 🔥 Import Toast
 
@@ -98,7 +98,8 @@ const AddItemForm = () => {
         gstRate: parseInt(newItem.gstRate) || 0,
         openingStockDate: String(newItem.openingStockDate),
         status: "Active",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        userId: auth.currentUser ? auth.currentUser.uid : null
       };
 
       await addDoc(collection(db, "items"), cleanedPayload);

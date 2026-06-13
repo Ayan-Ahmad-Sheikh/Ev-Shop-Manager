@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../Firebase/firebaseConfig';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
 
@@ -33,15 +33,21 @@ const Settings = () => {
     // --- 3. FETCH EXISTING SETTINGS ---
     useEffect(() => {
         const fetchSettings = async () => {
+            // 👉 Agar login nahi hai, toh aage mat badho
+            if (!auth.currentUser) return;
+            const userId = auth.currentUser.uid;
+
             try {
-                const shopDocRef = doc(db, 'settings', 'shopDetails');
+                // 👉 Yahan document ka naam change kiya hai
+                const shopDocRef = doc(db, 'settings', `shopDetails_${userId}`);
                 const shopSnap = await getDoc(shopDocRef);
 
                 if (shopSnap.exists()) {
                     setShopDetails(shopSnap.data());
                 }
 
-                const invDocRef = doc(db, 'settings', 'invoiceRules');
+                // 👉 Invoice rules ka naam bhi change kiya hai
+                const invDocRef = doc(db, 'settings', `invoiceRules_${userId}`);
                 const invSnap = await getDoc(invDocRef);
                 if (invSnap.exists()) {
                     setInvoiceSettings(invSnap.data());
@@ -57,9 +63,17 @@ const Settings = () => {
 
     const handleSaveProfile = async (e) => {
         e.preventDefault();
+        if (!auth.currentUser) return;
+        const userId = auth.currentUser.uid;
+        
         setSaving(true);
         try {
-            await updateDoc(doc(db, "settings", "shopDetails"), shopDetails);
+            // 👉 updateDoc ki jagah setDoc use kiya hai
+            await setDoc(doc(db, "settings", `shopDetails_${userId}`), {
+                ...shopDetails,
+                userId: userId
+            }, { merge: true });
+            
             toast.success("✅ Shop Profile Updated Successfully!");
         } catch (error) {
             console.error("Error updating profile:", error);
@@ -71,12 +85,16 @@ const Settings = () => {
 
     const handleSaveInvoiceSettings = async (e) => {
         e.preventDefault();
+        if (!auth.currentUser) return;
+        const userId = auth.currentUser.uid;
+
         try {
-            await updateDoc(doc(db, "settings", "invoiceRules"), invoiceSettings)
-                .catch(async () => {
-                    const { setDoc } = require('firebase/firestore');
-                    await setDoc(doc(db, "settings", "invoiceRules"), invoiceSettings);
-                });
+            // 👉 Yahan bhi setDoc use kiya hai
+            await setDoc(doc(db, "settings", `invoiceRules_${userId}`), {
+                ...invoiceSettings,
+                userId: userId
+            }, { merge: true });
+            
             toast.success("✅ Invoice Settings Saved!");
         } catch (error) {
             console.error("Error saving invoice rules", error);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const ItemWiseReport = () => {
     const [reportData, setReportData] = useState([]);
@@ -13,9 +13,14 @@ const ItemWiseReport = () => {
 
     useEffect(() => {
         const fetchAnalytics = async () => {
+            if (!auth.currentUser) return;
+
             try {
-                // 1. Fetch Inventory (Lagat/Cost Price nikalne ke liye)
-                const invSnap = await getDocs(collection(db, "items"));
+                const userId = auth.currentUser.uid;
+
+                // 1. Fetch Inventory (Sirf apna)
+                const invQuery = query(collection(db, "items"), where("userId", "==", userId));
+                const invSnap = await getDocs(invQuery);
                 const inventoryMap = {};
                 invSnap.docs.forEach(doc => {
                     const data = doc.data();
@@ -23,10 +28,11 @@ const ItemWiseReport = () => {
                     inventoryMap[data.name] = data; // Lookup by Name fallback
                 });
 
-                // 2. Fetch All Bills (Bikri/Sales nikalne ke liye)
-                const billsSnap = await getDocs(collection(db, "bills"));
+                // 2. Fetch All Bills (Sirf apna)
+                const billsQuery = query(collection(db, "bills"), where("userId", "==", userId));
+                const billsSnap = await getDocs(billsQuery);
                 const partStats = {};
-
+                
                 let grandQty = 0;
                 let grandRevenue = 0;
                 let grandCost = 0;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../Firebase/firebaseConfig';
+import { db, auth } from '../Firebase/firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
@@ -20,15 +20,22 @@ const SetupShop = () => {
 
     const handleSetupSubmit = async (e) => {
         e.preventDefault();
+        // 👉 Agar login nahi hai, toh rok do
+        if (!auth.currentUser) {
+            toast.error("Bhai, pehle login karna zaroori hai!");
+            return;
+        }
+
         if (!shopName || !phone) {
             toast.error("Dukan ka naam aur phone number zaroori hai bhai!");
             return;
         }
 
+        const userId = auth.currentUser.uid;
         setLoading(true);
         try {
-            // Poori details Firestore database me save kar do (Bina Logo Ke)
-            await setDoc(doc(db, "settings", "shopDetails"), {
+            // 👉 File ka naam shopDetails_USERID kar diya
+            await setDoc(doc(db, "settings", `shopDetails_${userId}`), {
                 shopName,
                 phone,
                 address,
@@ -38,7 +45,10 @@ const SetupShop = () => {
                 stateCode,
                 whatsapp,
                 email,
-                setupComplete: true
+                setupComplete: true,
+                
+                // 👉 Yahan profile ke andar bhi userId daal diya
+                userId: userId
             });
 
             toast.success("🎉 Professional Shop Setup Completed Successfully!");

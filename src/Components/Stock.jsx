@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const Stock = () => {
   const [inventory, setInventory] = useState([]);
@@ -10,8 +10,15 @@ const Stock = () => {
 
   useEffect(() => {
     const fetchItems = async () => {
+      if (!auth.currentUser) return;
+
       try {
-        const querySnapshot = await getDocs(collection(db, "items"));
+        const q = query(
+          collection(db, "items"), 
+          where("userId", "==", auth.currentUser.uid)
+        );
+
+        const querySnapshot = await getDocs(q);
         const itemsList = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()

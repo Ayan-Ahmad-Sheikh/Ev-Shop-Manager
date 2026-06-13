@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../Firebase/firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { db, auth } from '../Firebase/firebaseConfig';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const TaxReports = () => {
     const [loading, setLoading] = useState(true);
@@ -18,21 +18,29 @@ const TaxReports = () => {
 
     useEffect(() => {
         const fetchAllData = async () => {
+            // 👉 Agar login nahi hai, toh return kar do
+            if (!auth.currentUser) return;
+
             try {
+                const userId = auth.currentUser.uid;
                 setLoading(true);
-                // 1. Fetch Inventory (For Cost Calculation)
-                const invSnap = await getDocs(collection(db, "items"));
+
+                // 1. Fetch Inventory (Sirf apna)
+                const invQuery = query(collection(db, "items"), where("userId", "==", userId));
+                const invSnap = await getDocs(invQuery);
                 const invMap = {};
                 invSnap.docs.forEach(doc => { invMap[doc.id] = doc.data(); invMap[doc.data().name] = doc.data(); });
                 setInventory(invMap);
 
-                // 2. Fetch Bills
-                const billsSnap = await getDocs(collection(db, "bills"));
+                // 2. Fetch Bills (Sirf apna)
+                const billsQuery = query(collection(db, "bills"), where("userId", "==", userId));
+                const billsSnap = await getDocs(billsQuery);
                 const billsList = billsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setBills(billsList);
 
-                // 3. Fetch Expenses
-                const expSnap = await getDocs(collection(db, "expenses"));
+                // 3. Fetch Expenses (Sirf apna)
+                const expQuery = query(collection(db, "expenses"), where("userId", "==", userId));
+                const expSnap = await getDocs(expQuery);
                 const expList = expSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setExpenses(expList);
 
