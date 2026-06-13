@@ -179,41 +179,49 @@ Thank you for visiting!`;
       return;
     }
 
-    try {
-      // PDF banne me 1-2 second lagte hain, isliye user ko bata rahe hain
-      const toastId = toast.loading("PDF ban raha hai, kripya pratiksha karein...");
+    const toastId = toast.loading("PDF ban raha hai, kripya pratiksha karein...");
+    let tempDiv = null;
 
-      const canvas = await html2canvas(element, {
+    try {
+      // 🚀 ULTIMATE FIX: Off-Screen Rendering
+      // Invoice ko modal se bahar nikal kar secretly body me dalenge 
+      tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px'; // Screen ke bahar chupao
+      tempDiv.style.top = '0';
+      tempDiv.style.width = '800px'; // Pakka Desktop Width (Grid bachane ke liye)
+      tempDiv.style.backgroundColor = '#ffffff';
+      tempDiv.style.zIndex = '-1';
+
+      // Original invoice ki copy banake isme daalo
+      const clone = element.cloneNode(true);
+      tempDiv.appendChild(clone);
+      document.body.appendChild(tempDiv);
+
+      // Ab photo khincho is naye, azaad aur fixed size wale element ki
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        windowWidth: 800, // Background me desktop size set karega
-        onclone: (clonedDoc) => {
-          // 🔥 FIX: Hidden copy ko zabardasti Desktop size aur layout dena
-          const clonedElement = clonedDoc.getElementById('real-invoice-content');
-          clonedElement.style.width = '800px';
-          clonedElement.style.minWidth = '800px';
-          clonedElement.style.maxWidth = '800px';
-
-          // Parent element ko bhi lock kar do taaki mobile usko dabaye na
-          if (clonedElement.parentNode) {
-            clonedElement.parentNode.style.width = '800px';
-            clonedElement.parentNode.style.minWidth = '800px';
-          }
-        }
+        windowWidth: 800
       });
+
+      // Photo khinchte hi kachra saaf kar do taaki mobile hang na ho
+      if (document.body.contains(tempDiv)) {
+        document.body.removeChild(tempDiv);
+      }
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      const margin = 12; // 12mm ka side margin
+      const margin = 12; // 12mm ka margin
       const pdfPageWidth = pdf.internal.pageSize.getWidth();
       const pdfPageHeight = pdf.internal.pageSize.getHeight();
 
       const pdfImageWidth = pdfPageWidth - (margin * 2);
       const pdfImageHeight = (canvas.height * pdfImageWidth) / canvas.width;
 
-      // MULTI-PAGE LOGIC (Lamba bill aage ke pages pe jayega)
+      // MULTI-PAGE LOGIC
       let heightLeft = pdfImageHeight;
       let position = margin;
       const usablePageHeight = pdfPageHeight - (margin * 2);
@@ -228,12 +236,12 @@ Thank you for visiting!`;
         heightLeft -= usablePageHeight;
       }
 
-      // File ka naam set karna
+      // File Name Setup
       const finalBillId = String(bill.id).startsWith(invoicePrefix) ? String(bill.id) : `${invoicePrefix}${bill.id}`;
       const safeBillId = finalBillId.replace(/[\/\\]/g, '_');
       const fileName = `Invoice_${safeBillId}.pdf`;
 
-      toast.dismiss(toastId); // PDF ban gaya toh loading hata do
+      toast.dismiss(toastId);
 
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -257,7 +265,11 @@ Thank you for visiting!`;
 
     } catch (error) {
       console.error("Direct PDF generation failed:", error);
-      toast.dismiss();
+      // Agar error aaye toh bhi kachra saaf karna zaroori hai
+      if (tempDiv && document.body.contains(tempDiv)) {
+        document.body.removeChild(tempDiv);
+      }
+      toast.dismiss(toastId);
       toast.error(`Bhai, PDF banane me dikkat aayi: ${error.message}`);
     }
   };
