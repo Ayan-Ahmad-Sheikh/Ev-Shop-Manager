@@ -35,7 +35,7 @@ const Billing = () => {
         const userId = auth.currentUser.uid;
         const shopDoc = await getDoc(doc(db, "settings", `shopDetails_${userId}`));
         const rulesDoc = await getDoc(doc(db, "settings", `invoiceRules_${userId}`));
-        
+
         if (shopDoc.exists()) {
           setShopDetails(prev => ({ ...prev, ...shopDoc.data() }));
         }
@@ -138,7 +138,35 @@ const Billing = () => {
       toast.error("Customer ka mobile number valid nahi hai!");
       return;
     }
-    const textMessage = `Dukan Bill Details:\nHi ${bill.customerName},\nInvoice: ${bill.id}\nTotal: Rs ${bill.grandTotal}\nPaid: Rs ${bill.paidAmount}\nDue: Rs ${bill.dueAmount}\nThank you!`;
+
+    // 1. Items ki ek clean list banate hain
+    let itemsListText = '';
+    bill.items.forEach((item, index) => {
+      // Format: 1. Controller - 2 Pcs x Rs 1500 = Rs 3000
+      const itemTotal = item.qty * item.price;
+      itemsListText += `${index + 1}. ${item.name} - ${item.qty} ${item.unit || 'Pcs'} x Rs ${item.price} = Rs ${itemTotal}\n`;
+    });
+
+    // 2. Prefix check kar lete hain taaki bill no. sahi dikhe
+    const finalBillId = String(bill.id).startsWith(invoicePrefix) ? String(bill.id) : `${invoicePrefix}${bill.id}`;
+
+    // 3. Final SMS ka Format
+    const textMessage = `🧾 ${shopDetails.shopName || 'Dukan'} - Bill Details
+
+Hi ${bill.customerName},
+Invoice: ${finalBillId}
+Date: ${bill.date}
+
+🛒 Items Purchased:
+${itemsListText}
+--------------------
+💰 Total Bill: Rs ${bill.grandTotal}
+✅ Paid Amount: Rs ${bill.paidAmount}
+⏳ Due (Udhar): Rs ${bill.dueAmount}
+
+Thank you for visiting!`;
+
+    // 4. SMS app me bhejna
     const smsUrl = `sms:+91${bill.phone}?body=${encodeURIComponent(textMessage)}`;
     window.open(smsUrl, '_self');
   };
@@ -152,22 +180,49 @@ const Billing = () => {
     }
 
     try {
+      // Mobile par perfect width laane ke liye
+      const originalWidth = element.style.width;
+      const originalMaxWidth = element.style.maxWidth;
+      element.style.width = '800px';
+      element.style.maxWidth = 'none';
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         scrollY: -window.scrollY,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
+        windowWidth: 800
       });
+
+      element.style.width = originalWidth;
+      element.style.maxWidth = originalMaxWidth;
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const margin = 12; // 12mm ka margin dono side
+      const pdfPageWidth = pdf.internal.pageSize.getWidth();
+      const pdfPageHeight = pdf.internal.pageSize.getHeight(); // A4 page ki total height
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      const pdfImageWidth = pdfPageWidth - (margin * 2);
+      const pdfImageHeight = (canvas.height * pdfImageWidth) / canvas.width;
+
+      // 🔥 FIX: MULTI-PAGE LOGIC (Agar bill lamba hai toh aage ke pages add karo)
+      let heightLeft = pdfImageHeight;
+      let position = margin; // Pehla page top margin se shuru hoga
+      const usablePageHeight = pdfPageHeight - (margin * 2);
+
+      // Pehla page add karo
+      pdf.addImage(imgData, 'JPEG', margin, position, pdfImageWidth, pdfImageHeight);
+      heightLeft -= usablePageHeight; // Jo height print ho gayi, usko minus karo
+
+      // Jab tak aur height bachi hai, naya page banate jao
+      while (heightLeft > 0) {
+        position = position - usablePageHeight; // Image ko ek page utna upar shift karo
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, pdfImageWidth, pdfImageHeight);
+        heightLeft -= usablePageHeight;
+      }
 
       // Prefix check for filename
       const finalBillId = String(bill.id).startsWith(invoicePrefix) ? String(bill.id) : `${invoicePrefix}${bill.id}`;
