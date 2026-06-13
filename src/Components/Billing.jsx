@@ -444,138 +444,147 @@ Thank you for visiting!`;
 
             <div className="p-6 overflow-y-auto space-y-4" id="invoice-print-area">
 
-              <div className="border border-black text-xs text-gray-950 font-sans bg-white p-1" id="real-invoice-content">
-
+              <div
+                id="real-invoice-content"
+                style={{
+                  width: '800px', // STRICT DESKTOP WIDTH
+                  minWidth: '800px',
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
+                  fontFamily: 'Arial, Helvetica, sans-serif', // Times New Roman hatane ke liye
+                  border: '1px solid #000',
+                  padding: '5px',
+                  boxSizing: 'border-box'
+                }}
+              >
                 {/* DYNAMIC TITLE */}
-                <div className="text-center font-black text-sm uppercase tracking-widest border-b border-black py-1 bg-gray-50">
+                <div style={{ textAlign: 'center', fontWeight: '900', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid #000', padding: '6px', backgroundColor: '#f9fafb' }}>
                   {isEstimateMode ? 'Sale Invoice' : 'TAX INVOICE'}
                 </div>
 
-                {/* HEADER ROW - CHANGED TO FLEX */}
-                <div className="flex border-b border-black w-full">
-                  <div className="w-1/2 p-2 border-r border-black space-y-1">
-                    <h2 className="font-black text-base uppercase tracking-wide text-gray-900">{shopDetails.shopName || 'YOUR BUSINESS NAME'}</h2>
-                    <p className="text-[11px] font-medium text-gray-700 leading-tight whitespace-pre-wrap">{shopDetails.address}</p>
-                    <p className="text-[11px] font-medium">Contact: +91 {shopDetails.phone}</p>
+                {/* HEADER ROW */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #000', width: '100%' }}>
+                  <div style={{ width: '50%', padding: '8px', borderRight: '1px solid #000', boxSizing: 'border-box' }}>
+                    <h2 style={{ fontWeight: '900', fontSize: '18px', textTransform: 'uppercase', margin: '0 0 4px 0' }}>{shopDetails.shopName || 'YOUR BUSINESS NAME'}</h2>
+                    <p style={{ fontSize: '12px', margin: '0 0 4px 0', whiteSpace: 'pre-wrap' }}>{shopDetails.address}</p>
+                    <p style={{ fontSize: '12px', margin: '0 0 4px 0' }}>Contact: +91 {shopDetails.phone}</p>
                     {(!isEstimateMode && shopDetails.gstin) && (
-                      <p className="font-black text-[11px] text-gray-900 font-mono mt-1">GSTIN/UIN: {shopDetails.gstin}</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '12px', marginTop: '6px', margin: '0' }}>GSTIN/UIN: {shopDetails.gstin}</p>
                     )}
                   </div>
 
-                  <div className="w-1/2 flex flex-wrap">
-                    <div className="w-1/2 p-2 border-r border-b border-black">
-                      <p className="text-[10px] text-gray-500 font-bold">Document No.</p>
-                      <p className="font-black text-gray-900 font-mono text-sm">
+                  <div style={{ width: '50%', display: 'flex', flexWrap: 'wrap', boxSizing: 'border-box' }}>
+                    <div style={{ width: '50%', padding: '8px', borderRight: '1px solid #000', borderBottom: '1px solid #000', boxSizing: 'border-box' }}>
+                      <p style={{ fontSize: '10px', color: '#666', margin: '0 0 2px 0', fontWeight: 'bold' }}>Document No.</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '14px', margin: '0' }}>
                         {String(selectedBill.id).startsWith(invoicePrefix) ? selectedBill.id : `${invoicePrefix}${selectedBill.id}`}
                       </p>
                     </div>
-                    <div className="w-1/2 p-2 border-b border-black">
-                      <p className="text-[10px] text-gray-500 font-bold">Dated</p>
-                      <p className="font-black text-gray-900 font-mono text-sm">{selectedBill.date}</p>
+                    <div style={{ width: '50%', padding: '8px', borderBottom: '1px solid #000', boxSizing: 'border-box' }}>
+                      <p style={{ fontSize: '10px', color: '#666', margin: '0 0 2px 0', fontWeight: 'bold' }}>Dated</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '14px', margin: '0' }}>{selectedBill.date}</p>
                     </div>
-                    <div className="w-1/2 p-2 border-r border-black">
-                      <p className="text-[10px] text-gray-500 font-bold">Buyer's Ref./Order No.</p>
-                      <p className="font-bold text-gray-800">N/A (Walk-in)</p>
+                    <div style={{ width: '50%', padding: '8px', borderRight: '1px solid #000', boxSizing: 'border-box' }}>
+                      <p style={{ fontSize: '10px', color: '#666', margin: '0 0 2px 0', fontWeight: 'bold' }}>Buyer's Ref./Order No.</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '12px', margin: '0' }}>N/A (Walk-in)</p>
                     </div>
-                    <div className="w-1/2 p-2">
-                      <p className="text-[10px] text-gray-500 font-bold">Mode of Payment</p>
-                      <p className="font-black uppercase text-gray-800">{selectedBill.paymentMode}</p>
+                    <div style={{ width: '50%', padding: '8px', boxSizing: 'border-box' }}>
+                      <p style={{ fontSize: '10px', color: '#666', margin: '0 0 2px 0', fontWeight: 'bold' }}>Mode of Payment</p>
+                      <p style={{ fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase', margin: '0' }}>{selectedBill.paymentMode}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* CUSTOMER ROW - CHANGED TO FLEX */}
-                <div className="flex border-b border-black bg-gray-50/30 w-full">
-                  <div className="w-1/2 p-2 border-r border-black space-y-0.5">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">Customer (Bill to)</p>
-                    <p className="font-black text-gray-900 text-sm uppercase">{selectedBill.customerName}</p>
-                    <p className="text-gray-600 font-medium">📞 Phone: {selectedBill.phone}</p>
+                {/* CUSTOMER ROW */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #000', backgroundColor: '#fafafa', width: '100%' }}>
+                  <div style={{ width: '50%', padding: '8px', borderRight: '1px solid #000', boxSizing: 'border-box' }}>
+                    <p style={{ fontSize: '10px', color: '#666', margin: '0 0 2px 0', fontWeight: 'bold', textTransform: 'uppercase' }}>Customer (Bill to)</p>
+                    <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', margin: '0 0 2px 0' }}>{selectedBill.customerName}</p>
+                    <p style={{ fontSize: '12px', margin: '0 0 4px 0' }}>Phone: {selectedBill.phone}</p>
                     {(!isEstimateMode && selectedBill.customerGstin) && (
-                      <p className="font-mono font-black text-purple-800 text-[11px] bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded w-fit mt-1">
-                        GSTIN/UIN: {selectedBill.customerGstin}
-                      </p>
+                      <p style={{ fontSize: '11px', fontWeight: 'bold', margin: '0' }}>GSTIN/UIN: {selectedBill.customerGstin}</p>
                     )}
                   </div>
-
-                  <div className="w-1/2 p-2">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">Destination / Logistics</p>
-                    <p className="font-black uppercase text-gray-800">{selectedBill.destination || 'LOCAL'} | {selectedBill.transportName || 'HAND DELIVERY'}</p>
+                  <div style={{ width: '50%', padding: '8px', boxSizing: 'border-box' }}>
+                    <p style={{ fontSize: '10px', color: '#666', margin: '0 0 2px 0', fontWeight: 'bold', textTransform: 'uppercase' }}>Destination / Logistics</p>
+                    <p style={{ fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase', margin: '0' }}>{selectedBill.destination || 'LOCAL'} | {selectedBill.transportName || 'HAND DELIVERY'}</p>
                   </div>
                 </div>
 
-                {/* TABLE - REMAINS SAME AS HTML TABLES WORK PERFECTLY */}
-                <table className="w-full text-left border-collapse border-b border-black text-[11px]">
+                {/* TABLE */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', borderBottom: '1px solid #000', fontSize: '12px' }}>
                   <thead>
-                    <tr className="border-b border-black bg-gray-100 font-bold text-center">
-                      <th className="p-1.5 border-r border-black w-8">Sl</th>
-                      <th className="p-1.5 border-r border-black text-left">Description of Goods</th>
-                      <th className="p-1.5 border-r border-black w-20">Quantity</th>
-                      <th className="p-1.5 border-r border-black w-20 text-right">Rate</th>
-                      <th className="p-1.5 text-right w-24">Amount</th>
+                    <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#f3f4f6' }}>
+                      <th style={{ padding: '6px', borderRight: '1px solid #000', width: '40px', textAlign: 'center' }}>Sl</th>
+                      <th style={{ padding: '6px', borderRight: '1px solid #000', textAlign: 'left' }}>Description of Goods</th>
+                      <th style={{ padding: '6px', borderRight: '1px solid #000', width: '80px', textAlign: 'center' }}>Quantity</th>
+                      <th style={{ padding: '6px', borderRight: '1px solid #000', width: '80px', textAlign: 'right' }}>Rate</th>
+                      <th style={{ padding: '6px', width: '100px', textAlign: 'right' }}>Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-black/30">
+                  <tbody>
                     {selectedBill.items.map((item, idx) => {
                       const taxRate = item.refData?.gstRate || 18;
                       const displayPrice = isEstimateMode ? (item.price * (1 + taxRate / 100)) : item.price;
                       const displayAmount = item.qty * displayPrice;
 
                       return (
-                        <tr key={idx} className="font-medium align-top">
-                          <td className="p-2 border-r border-black text-center font-bold text-gray-400">{idx + 1}</td>
-                          <td className="p-2 border-r border-black">
-                            <div className="font-black text-gray-900 uppercase">{item.name}</div>
-                            {(!isEstimateMode && item.hsnCode) && <span className="text-[10px] text-purple-700 font-mono font-bold block">HSN: {item.hsnCode}</span>}
-                            {(!isEstimateMode && !item.hsnCode && item.refData?.hsnCode) && <span className="text-[10px] text-purple-700 font-mono font-bold block">HSN: {item.refData.hsnCode}</span>}
+                        <tr key={idx} style={{ verticalAlign: 'top', borderBottom: idx !== selectedBill.items.length - 1 ? '1px solid #eaeaea' : 'none' }}>
+                          <td style={{ padding: '8px', borderRight: '1px solid #000', textAlign: 'center', fontWeight: 'bold' }}>{idx + 1}</td>
+                          <td style={{ padding: '8px', borderRight: '1px solid #000' }}>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{item.name}</div>
+                            {(!isEstimateMode && item.hsnCode) && <span style={{ fontSize: '10px', color: '#555', display: 'block', marginTop: '2px' }}>HSN: {item.hsnCode}</span>}
+                            {(!isEstimateMode && !item.hsnCode && item.refData?.hsnCode) && <span style={{ fontSize: '10px', color: '#555', display: 'block', marginTop: '2px' }}>HSN: {item.refData.hsnCode}</span>}
                           </td>
-                          <td className="p-2 border-r border-black text-center font-black text-gray-900">{item.qty} {item.unit || 'PCS'}</td>
-                          <td className="p-2 border-r border-black text-right font-mono">₹{displayPrice.toFixed(2)}</td>
-                          <td className="p-2 text-right font-mono font-black text-gray-900">₹{displayAmount.toFixed(2)}</td>
+                          <td style={{ padding: '8px', borderRight: '1px solid #000', textAlign: 'center', fontWeight: 'bold' }}>{item.qty} {item.unit || 'PCS'}</td>
+                          <td style={{ padding: '8px', borderRight: '1px solid #000', textAlign: 'right' }}>₹{displayPrice.toFixed(2)}</td>
+                          <td style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>₹{displayAmount.toFixed(2)}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
 
-                {/* TOTALS ROW - CHANGED TO FLEX */}
-                <div className="flex p-2 bg-gray-50/50 items-center w-full border-b border-black">
-                  <div className="w-7/12 text-[10px] text-gray-500 font-semibold space-y-1">
-                    <p className="font-bold text-gray-800">Note:</p>
-                    <p>{isEstimateMode ? 'This is an estimate/quotation and not a tax invoice.' : 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.'}</p>
+                {/* TOTALS ROW */}
+                <div style={{ display: 'flex', width: '100%', borderBottom: '1px solid #000', backgroundColor: '#fafafa' }}>
+                  <div style={{ width: '60%', padding: '8px', boxSizing: 'border-box' }}>
+                    <p style={{ fontWeight: 'bold', fontSize: '12px', margin: '0 0 4px 0' }}>Note:</p>
+                    <p style={{ fontSize: '11px', color: '#555', margin: '0' }}>{isEstimateMode ? 'This is an estimate/quotation and not a tax invoice.' : 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.'}</p>
                   </div>
 
-                  <div className="w-5/12 text-xs space-y-1 font-medium pl-6">
+                  <div style={{ width: '40%', padding: '8px', boxSizing: 'border-box' }}>
                     {!isEstimateMode && (
                       <>
-                        <div className="flex justify-between text-gray-600"><span>Taxable Value:</span><span className="font-mono font-bold">₹{(selectedBill.subTotal || 0).toFixed(2)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px' }}><span>Taxable Value:</span><span style={{ fontWeight: 'bold' }}>₹{(selectedBill.subTotal || 0).toFixed(2)}</span></div>
                         {selectedBill.isLocal ? (
                           <>
-                            <div className="flex justify-between text-gray-500 text-[11px]"><span>CGST:</span><span className="font-mono">₹{(selectedBill.cgst || 0).toFixed(2)}</span></div>
-                            <div className="flex justify-between text-gray-500 text-[11px] border-b border-black/10 pb-1"><span>SGST:</span><span className="font-mono">₹{(selectedBill.sgst || 0).toFixed(2)}</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px', color: '#555' }}><span>CGST:</span><span>₹{(selectedBill.cgst || 0).toFixed(2)}</span></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '11px', color: '#555', borderBottom: '1px solid #eee', paddingBottom: '4px' }}><span>SGST:</span><span>₹{(selectedBill.sgst || 0).toFixed(2)}</span></div>
                           </>
                         ) : (
-                          <div className="flex justify-between text-orange-700 text-[11px] border-b border-black/10 pb-1"><span>IGST:</span><span className="font-mono">₹{(selectedBill.igst || 0).toFixed(2)}</span></div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '11px', color: '#555', borderBottom: '1px solid #eee', paddingBottom: '4px' }}><span>IGST:</span><span>₹{(selectedBill.igst || 0).toFixed(2)}</span></div>
                         )}
                       </>
                     )}
-                    {selectedBill.serviceCharge > 0 && <div className="flex justify-between text-blue-600 text-[11px]"><span>Labour / Fitting:</span><span className="font-mono">₹{selectedBill.serviceCharge.toFixed(2)}</span></div>}
-                    {selectedBill.discount > 0 && <div className="flex justify-between text-red-600 text-[11px]"><span>Discount:</span><span className="font-mono">-₹{selectedBill.discount.toFixed(2)}</span></div>}
-                    <div className="flex justify-between font-black text-gray-900 pt-1 text-sm border-t border-black">
+                    {selectedBill.serviceCharge > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px' }}><span>Labour / Fitting:</span><span>₹{selectedBill.serviceCharge.toFixed(2)}</span></div>}
+                    {selectedBill.discount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px', color: 'red' }}><span>Discount:</span><span>-₹{selectedBill.discount.toFixed(2)}</span></div>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '14px', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #000' }}>
                       <span>Total Amount:</span>
-                      <span className="font-mono text-green-800 text-base">₹{(selectedBill.grandTotal || 0).toFixed(2)}</span>
+                      <span>₹{(selectedBill.grandTotal || 0).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* SIGNATURE ROW - CHANGED TO FLEX */}
-                <div className="flex min-h-12.5 text-[10px] w-full">
-                  <div className="w-1/2 p-2 border-r border-black flex items-end text-gray-400 font-bold">Customer Sign</div>
-                  <div className="w-1/2 p-2 text-right flex flex-col justify-between items-end">
-                    <p className="font-bold text-gray-500 uppercase">for {shopDetails.shopName || 'YOUR BUSINESS NAME'}</p>
-                    <p className="font-bold text-gray-900 mt-6">Authorised Signatory</p>
+                {/* SIGNATURE ROW */}
+                <div style={{ display: 'flex', width: '100%', minHeight: '60px' }}>
+                  <div style={{ width: '50%', padding: '8px', borderRight: '1px solid #000', display: 'flex', alignItems: 'flex-end', fontSize: '12px', fontWeight: 'bold', color: '#666', boxSizing: 'border-box' }}>
+                    Customer Sign
+                  </div>
+                  <div style={{ width: '50%', padding: '8px', textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', boxSizing: 'border-box' }}>
+                    <p style={{ fontWeight: 'bold', fontSize: '11px', color: '#555', margin: '0', textTransform: 'uppercase' }}>for {shopDetails.shopName || 'YOUR BUSINESS NAME'}</p>
+                    <p style={{ fontWeight: 'bold', fontSize: '12px', margin: '0' }}>Authorised Signatory</p>
                   </div>
                 </div>
-
               </div>
             </div>
 
