@@ -13,6 +13,7 @@ import Login from './Authentication/Login'
 import SetupShop from './Shop Setup/SetupShop'
 import ItemWiseReport from './Report/ItemWiseReport'
 import ExpenseTracker from './Expense Tracker/ExpenseTracker'
+import Welcome from './Welcome/Welcome';
 import TaxReports from './Report/TaxReports'
 import { auth } from './Firebase/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -44,7 +45,7 @@ function App() {
           {/* 1. LOGIN ROUTE: Bina Layout ke full screen chalega. Agar pehle se login ho toh automatic Dashboard (/) bhej dega */}
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
           <Route path="/setup-shop" element={user ? <SetupShop /> : <Navigate to="/login" />} />
-          
+
           {/* 2. PROTECTED ROUTES: Baaki saare pages Layout ke andar tabhi dikhenge jab banda login hoga */}
           <Route
             path="*"
@@ -69,7 +70,11 @@ function App() {
                 </Layout>
               ) : (
                 // Agar login nahi hai, toh seedha login screen par fenko
-                <Navigate to="/login" />
+                <Routes>
+                  {/* Yeh wahin rahega, isko upar-niche mat karna */}
+                  <Route path="/" element={<Welcome />} />
+                  <Route path="*" element={<Navigate to="/login" />} />
+                </Routes>
               )
             }
           />

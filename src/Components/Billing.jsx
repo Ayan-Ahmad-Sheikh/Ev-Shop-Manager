@@ -281,6 +281,55 @@ Thank you for visiting!`;
     }
   };
 
+  const handlePrintReceipt = () => {
+    const invoiceContent = document.getElementById('real-invoice-content').innerHTML;
+
+    if (!invoiceContent) {
+      toast.error("Invoice nahi mila!");
+      return;
+    }
+
+    // 1. Ek chhupee hui (invisible) frame banate hain
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'absolute';
+    printFrame.style.top = '-10000px'; // Screen ke bahar phenk diya
+    document.body.appendChild(printFrame);
+
+    // 2. Us frame ke andar hum sirf apne bill ka code daalenge
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write('<html><head><title>Print Invoice</title>');
+    
+    // Thodi si printing ki basic setting (Margin wagarah)
+    frameDoc.write(`
+      <style>
+        @media print {
+          @page { margin: 8mm; } /* Printer ka margin */
+          body { 
+            margin: 0; 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact; 
+          }
+        }
+      </style>
+    `);
+    frameDoc.write('</head><body>');
+    frameDoc.write(invoiceContent); // Sirf bill ka design paste kiya
+    frameDoc.write('</body></html>');
+    frameDoc.close();
+
+    // 3. Frame ko load hone ka thoda time de kar print maar do
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+      printFrame.contentWindow.print();
+      
+      // 4. Print hone ke baad kachra saaf kar do
+      setTimeout(() => {
+        document.body.removeChild(printFrame);
+      }, 1000);
+    }, 250);
+  };
+
   if (loading) {
     return <div className="p-10 text-center text-gray-500 font-bold text-lg">⏳ Cloud se Bills History load ho rahi hai...</div>;
   }
@@ -612,7 +661,7 @@ Thank you for visiting!`;
                 📄 Share PDF
               </button>
 
-              <button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition-all">
+              <button onClick={handlePrintReceipt} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition-all">
                 🖨️ Print
               </button>
 
