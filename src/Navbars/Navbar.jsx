@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from '../Firebase/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const Navbar = ({ setSidebarOpen }) => {
   const location = useLocation();
@@ -28,17 +28,30 @@ const Navbar = ({ setSidebarOpen }) => {
   // 👉 Firestore se Shop Name nikalna taaki Avatar ban sake
   useEffect(() => {
     const fetchShopDetails = async () => {
-      try {
-        const docRef = doc(db, "settings", "shopDetails");
-        const docSnap = await getDoc(docRef);
+      // Agar user login nahi hai, toh data fetch mat karo
+      if (!auth.currentUser) return;
 
-        if (docSnap.exists() && docSnap.data().shopName) {
-          setShopName(docSnap.data().shopName);
+      try {
+        // 👉 NAYI QUERY: Sirf is logged-in user ki shop details lao
+        const q = query(
+          collection(db, "settings"),
+          where("userId", "==", auth.currentUser.uid)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        // Agar data milta hai toh set kar do
+        if (!querySnapshot.empty) {
+          const docData = querySnapshot.docs[0].data();
+          if (docData.shopName) {
+            setShopName(docData.shopName);
+          }
         }
       } catch (error) {
         console.error("Error fetching shop details for navbar:", error);
       }
     };
+
     fetchShopDetails();
   }, [location.pathname]);
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from "firebase/auth";
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -16,36 +17,33 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkShopData = async () => {
-            if (auth.currentUser) {
-                // 🔥 FIX: Ab Dashboard wahi check karega jahan SetupShop ne data save kiya hai!
-                const docRef = doc(db, "settings", `shopDetails_${auth.currentUser.uid}`);
-                const docSnap = await getDoc(docRef);
-
-                if (!docSnap.exists()) {
-                    // Agar dukan ka data nahi mila tabhi wapas bhejo
-                    navigate('/setup-shop');
-                }
+        // 🔥 NAYA TARIKA: Firebase Auth ka wait karo taaki "Infinite Loading" na ho
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                // Agar user login nahi hai, toh ruk jao aur spinner hatao
+                setLoading(false);
+                return;
             }
-        };
-
-        checkShopData();
-    }, [navigate]);
-
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            // 👉 Agar login nahi hai, toh aage mat badho
-            if (!auth.currentUser) return;
 
             try {
-                const userId = auth.currentUser.uid;
+                const userId = user.uid;
 
-                // A. Stock data laayein (Sirf apna)
+                // 🛑 STEP 1: Pehle Shop Setup Check karo
+                const shopRef = doc(db, "settings", `shopDetails_${userId}`);
+                const shopSnap = await getDoc(shopRef);
+
+                if (!shopSnap.exists()) {
+                    navigate('/setup-shop');
+                    return; // Agar setup nahi hai, toh aage ka dashboard data mat laao
+                }
+
+                // 🟢 STEP 2: Agar dukan hai, toh Dashboard ka saara maal laao
+                // A. Stock data laayein
                 const invQuery = query(collection(db, "items"), where("userId", "==", userId));
                 const invSnap = await getDocs(invQuery);
                 setInventory(invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-                // B. Bills data laayein (Sirf apna)
+                // B. Bills data laayein
                 const billsQuery = query(collection(db, "bills"), where("userId", "==", userId));
                 const billsSnap = await getDocs(billsQuery);
                 const billsList = billsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -54,13 +52,13 @@ const Dashboard = () => {
                 setRecentBills(billsList.slice(0, 5));
                 setAllBills(billsList);
 
-                // 🔥 C. NEW: Expenses data live laayein (Sirf apna)
+                // C. Expenses data laayein
                 const expQuery = query(collection(db, "expenses"), where("userId", "==", userId));
                 const expSnap = await getDocs(expQuery);
                 const expList = expSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setAllExpenses(expList);
 
-                // D. Customers ka Udhar laayein (Sirf apna)
+                // D. Customers ka Udhar laayein
                 const custQuery = query(collection(db, "customers"), where("userId", "==", userId));
                 const custSnap = await getDocs(custQuery);
                 let udharSum = 0;
@@ -70,11 +68,14 @@ const Dashboard = () => {
             } catch (error) {
                 console.error("Dashboard Fetch Error:", error);
             } finally {
+                // Saara kaam hone ke baad, ya error aane par hi loading spinner hategi
                 setLoading(false);
             }
-        };
-        fetchDashboardData();
-    }, []);
+        });
+
+        // Cleanup taaki memory leak na ho
+        return () => unsubscribe();
+    }, [navigate]);
 
     // 1. STOCK LOGIC CALCULATIONS
     const lowStockItems = inventory.filter(item => item.openingStock <= item.minStock);

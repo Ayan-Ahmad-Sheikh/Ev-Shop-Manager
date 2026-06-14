@@ -71,6 +71,13 @@ const AddItemForm = () => {
   };
 
   const saveActionLogic = async () => {
+    // 🛡️ NAYA CHECK: Agar Auth ID nahi mili, toh pehle hi rok do!
+    if (!auth.currentUser) {
+      toast.error("⚠️ Security Error: User ID nahi mili. Page ko ek baar refresh karo!");
+      return false;
+    }
+
+    // Baaki teri validations ekdum perfect hain
     if (!newItem.name.trim()) {
       toast.error("⚠️ Item Name zaroori hai bhai!");
       return false;
@@ -108,7 +115,8 @@ const AddItemForm = () => {
         openingStockDate: String(newItem.openingStockDate),
         status: "Active",
         createdAt: new Date().toISOString(),
-        userId: auth.currentUser ? auth.currentUser.uid : null
+        // 🔥 FIX: Ab hum 100% sure hain ki currentUser hai, toh direct UID daal do (null ka chance khatam)
+        userId: auth.currentUser.uid
       };
 
       await addDoc(collection(db, "items"), cleanedPayload);
@@ -121,7 +129,7 @@ const AddItemForm = () => {
       return false;
     }
     finally {
-      setIsSaving(false); // 🔥 SAVING KHATAM
+      setIsSaving(false);
     }
   };
 
@@ -272,9 +280,10 @@ const AddItemForm = () => {
                   <input
                     type="number"
                     min="1"
+                    onFocus={(e) => e.target.select()}
                     className={`w-20 border p-1 rounded text-center font-bold ${newItem.isFixedRate ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white text-black'}`}
                     value={newItem.conversionRate}
-                    onChange={(e) => handleInputChange('conversionRate', parseInt(e.target.value) || 1)}
+                    onChange={(e) => handleInputChange('conversionRate', e.target.value === '' ? '' : parseInt(e.target.value))}
                     readOnly={newItem.isFixedRate}
                   />
                   <span className="text-sm font-medium text-gray-700">{newItem.secondaryUnit}</span>
@@ -286,14 +295,46 @@ const AddItemForm = () => {
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 bg-gray-50 p-2 rounded">4. Pricing Details (Tax Exclusive Base Rates)</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label className="block text-sm text-gray-600 mb-1">Purchase Price / {newItem.primaryUnit}</label><input required type="number" className="w-full border p-2 rounded font-bold" value={newItem.purchasePrice} onChange={(e) => handleInputChange('purchasePrice', parseFloat(e.target.value) || 0)} /></div>
-              <div><label className="block text-sm text-blue-600 font-bold mb-1">🛍️ Retail Selling Price / {newItem.primaryUnit}</label><input required type="number" className="w-full border border-blue-200 p-2 rounded font-black text-blue-700 bg-blue-50/50" value={newItem.sellingPrice} onChange={(e) => handleInputChange('sellingPrice', parseFloat(e.target.value) || 0)} /></div>
-              <div><label className="block text-sm text-indigo-600 font-bold mb-1">📦 Wholesale Selling Price / {newItem.primaryUnit}</label><input required type="number" className="w-full border border-indigo-200 p-2 rounded font-black text-indigo-700 bg-indigo-50/50" value={newItem.wholesalePrice} onChange={(e) => handleInputChange('wholesalePrice', parseFloat(e.target.value) || 0)} /></div>
+              <div><label className="block text-sm text-gray-600 mb-1">Purchase Price / {newItem.primaryUnit}</label>
+                <input
+                  required
+                  type="number"
+                  onFocus={(e) => e.target.select()}
+                  className="w-full border p-2 rounded font-bold"
+                  value={newItem.purchasePrice}
+                  onChange={(e) => handleInputChange('purchasePrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                />
+              </div>
+              <div><label className="block text-sm text-blue-600 font-bold mb-1">🛍️ Retail Selling Price / {newItem.primaryUnit}</label><input
+                required
+                type="number"
+                onFocus={(e) => e.target.select()}
+                className="w-full border border-blue-200 p-2 rounded font-black text-blue-700 bg-blue-50/50"
+                value={newItem.sellingPrice}
+                onChange={(e) => handleInputChange('sellingPrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
+              /></div>
+              <div><label className="block text-sm text-indigo-600 font-bold mb-1">📦 Wholesale Selling Price / {newItem.primaryUnit}</label>
+                <input
+                  required
+                  type="number"
+                  onFocus={(e) => e.target.select()}
+                  className="w-full border border-indigo-200 p-2 rounded font-black text-indigo-700 bg-indigo-50/50"
+                  value={newItem.wholesalePrice}
+                  onChange={(e) => handleInputChange('wholesalePrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                />
+              </div>
 
               {newItem.secondaryUnit && (
                 <div className="md:col-span-3">
                   <label className="block text-sm text-gray-600 mb-1 font-medium">Loose Price / {newItem.secondaryUnit} (Optional)</label>
-                  <input type="number" className="w-1/3 border p-2 rounded" placeholder="e.g. 70" value={newItem.secondarySellingPrice} onChange={(e) => handleInputChange('secondarySellingPrice', parseFloat(e.target.value) || 0)} />
+                  <input
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="w-1/3 border p-2 rounded"
+                    placeholder="e.g. 70"
+                    value={newItem.secondarySellingPrice}
+                    onChange={(e) => handleInputChange('secondarySellingPrice', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  />
                 </div>
               )}
             </div>
@@ -302,9 +343,27 @@ const AddItemForm = () => {
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 bg-gray-50 p-2 rounded">5. Stock Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label className="block text-sm text-gray-600 mb-1">Opening Stock Qty</label><input required type="number" className="w-full border p-2 rounded font-bold" value={newItem.openingStock} onChange={(e) => handleInputChange('openingStock', parseFloat(e.target.value) || 0)} /></div>
+              <div><label className="block text-sm text-gray-600 mb-1">Opening Stock Qty</label>
+                <input
+                  required
+                  type="number"
+                  onFocus={(e) => e.target.select()}
+                  className="w-full border p-2 rounded font-bold"
+                  value={newItem.openingStock}
+                  onChange={(e) => handleInputChange('openingStock', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                />
+              </div>
               <div><label className="block text-sm text-gray-600 mb-1">As of Date</label><input type="date" className="w-full border p-2 rounded bg-gray-50 font-medium" value={newItem.openingStockDate} onChange={(e) => handleInputChange('openingStockDate', e.target.value)} /></div>
-              <div><label className="block text-sm text-gray-600 mb-1">Min Stock Alert</label><input required type="number" className="w-full border p-2 rounded" value={newItem.minStock} onChange={(e) => handleInputChange('minStock', parseFloat(e.target.value) || 0)} /></div>
+              <div><label className="block text-sm text-gray-600 mb-1">Min Stock Alert</label>
+                <input
+                  required
+                  type="number"
+                  onFocus={(e) => e.target.select()}
+                  className="w-full border p-2 rounded"
+                  value={newItem.minStock}
+                  onChange={(e) => handleInputChange('minStock', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                />
+              </div>
             </div>
           </div>
 

@@ -52,11 +52,14 @@ const CustomerLedger = () => {
     // A. Name ya Phone mapping logic
     const matchesSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.phone.includes(searchQuery);
+      (c.phone && c.phone.includes(searchQuery));
 
     // B. Wholesale vs Retail account filter rules separation
     let matchesAccountType = true;
-    const isWholesaleUser = c.phone && c.phone.length === 15 ? true : (c.gstin || c.customerGstin);
+
+    // 🔥 FIX: Phone ki jagah GSTIN ki length check karni hai (GSTIN 15 digit ka hota hai)
+    const gstinValue = c.gstin || c.customerGstin || '';
+    const isWholesaleUser = gstinValue.length === 15;
 
     if (accountFilter === 'B2B') {
       matchesAccountType = isWholesaleUser;

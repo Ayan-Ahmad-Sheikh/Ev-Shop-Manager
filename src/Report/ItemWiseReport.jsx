@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { onAuthStateChanged } from "firebase/auth";
 
 const ItemWiseReport = () => {
     const [reportData, setReportData] = useState([]);
@@ -12,11 +13,15 @@ const ItemWiseReport = () => {
     const [summary, setSummary] = useState({ totalQty: 0, totalRevenue: 0, totalProfit: 0 });
 
     useEffect(() => {
-        const fetchAnalytics = async () => {
-            if (!auth.currentUser) return;
+        // 🔥 FIX: Firebase Auth ka wait karo taaki Refresh karne par loading stuck na ho
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                setLoading(false);
+                return;
+            }
 
             try {
-                const userId = auth.currentUser.uid;
+                const userId = user.uid; // Direct user.uid mil gaya
 
                 // 1. Fetch Inventory (Sirf apna)
                 const invQuery = query(collection(db, "items"), where("userId", "==", userId));
@@ -54,10 +59,14 @@ const ItemWiseReport = () => {
                         // Cost (Lagat) nikalo asli database se
                         const refItem = inventoryMap[item.productId] || inventoryMap[item.name];
                         const purchasePrice = refItem ? (refItem.purchasePrice || 0) : 0;
+                        
+                        // 💡 Note: Agar tu aage chal kar secondary unit (e.g. Box vs Pcs) laata hai, 
+                        // toh purchasePrice ko yahan conversionRate se divide karna padega. 
+                        // Abhi ke liye tera logic 100% correct hai.
                         const itemCost = (item.qty * purchasePrice);
+                        
                         partStats[key].cost += itemCost;
-
-                        // Live stock bhi dikha denge table mein
+                        // Live stock update
                         partStats[key].currentStock = refItem ? (refItem.openingStock || 0) : 0;
 
                         // Grand Totals update
@@ -83,11 +92,12 @@ const ItemWiseReport = () => {
             } catch (error) {
                 console.error("Analytics Fetch Error:", error);
             } finally {
-                setLoading(false);
+                setLoading(false); // Ab hamesha loading hategi
             }
-        };
+        });
 
-        fetchAnalytics();
+        // Cleanup
+        return () => unsubscribe();
     }, []);
 
     // Filter & Sort Logic

@@ -220,6 +220,12 @@ const BillingForm = ({ setBillingMeta }) => {
   };
 
   const handleCompleteSale = async () => {
+    // 🛡️ SECURITY CHECK: Agar login ID nahi mili toh pehle hi rok do
+    if (!auth.currentUser) {
+      toast.error("⚠️ Security Error: User ID nahi mili. Page ko ek baar refresh karo!");
+      return;
+    }
+
     if (items.length === 0 || !items[0].name) {
       toast.error("Pehle koi part toh select karo bhai!");
       return;
@@ -227,7 +233,7 @@ const BillingForm = ({ setBillingMeta }) => {
 
     setIsSaving(true);
 
-    // 🛑 STEP 1: SAFETY CHECKPOST - Pehle check karo kisi item ka stock bheed mein khatam toh nahi?
+    // 🛑 STEP 1: SAFETY CHECKPOST - Stock check logic (Ekdum perfect hai tera)
     for (const item of items) {
       if (item.productId && item.productId.toString().length > 10) {
         const itemRef = doc(db, "items", item.productId);
@@ -241,10 +247,10 @@ const BillingForm = ({ setBillingMeta }) => {
             deductQty = item.qty / (item.refData.conversionRate || 1);
           }
 
-          // 🔥 AGAR GRAHAK JYADA MAANG RAHA HAI AUR DUKAN PAR NAHI HAI:
           if (currentStock < deductQty) {
             toast.error(`❌ Stock Shortage! "${item.name}" ka stock sirf ${currentStock} bacha hai, par aap ${deductQty} bech rahe hain. Pehle stock in karo bhai!`);
-            return; // 👈 Bill yahi ruk jayega, aage database me kuch save nahi hoga!
+            setIsSaving(false); // 👈 Pura function rukne se pehle button ko wapas normal karna mat bhulna
+            return;
           }
         }
       }
@@ -263,7 +269,6 @@ const BillingForm = ({ setBillingMeta }) => {
         destination: invoiceType === 'B2B' ? destination : '',
         items: items,
         subTotal: calculatedSubTotal,
-        customerGstin: invoiceType === 'B2B' ? customerGstin : '',
         cgst: totalCgst,
         sgst: totalSgst,
         igst: totalIgst,
@@ -275,12 +280,13 @@ const BillingForm = ({ setBillingMeta }) => {
         amountPaid: paymentMode === 'Split' ? parseFloat(amountPaid) : grandTotal,
         remainingUdhar: remainingUdhar,
         billDate: new Date().toISOString(),
-        userId: auth.currentUser ? auth.currentUser.uid : null
+        // 🔥 FIX 1: Direct UID daalo kyunki upar check laga diya hai
+        userId: auth.currentUser.uid
       };
 
       const docRef = await addDoc(collection(db, "bills"), billData);
 
-      // --- ACTUAL STOCK DEDUCTION (Ab yeh safe hai kyunki pehle check ho chuka h) ---
+      // --- ACTUAL STOCK DEDUCTION ---
       for (const item of items) {
         if (item.productId && item.productId.toString().length > 10) {
           const itemRef = doc(db, "items", item.productId);
@@ -295,17 +301,20 @@ const BillingForm = ({ setBillingMeta }) => {
             }
 
             let newStock = currentStock - deductQty;
-            newStock = parseFloat(newStock.toFixed(2)); // Decimal adjustment
+            newStock = parseFloat(newStock.toFixed(2));
 
             await updateDoc(itemRef, { openingStock: newStock });
           }
         }
       }
 
-      // --- KHATA BOOK LOGIC ---
+      // --- KHATA BOOK LOGIC (FIXED) ---
       if (paymentMode === 'Split' && remainingUdhar > 0) {
-        const customerId = customerPhone || customerName || `Unknown_${Date.now()}`;
-        const custRef = doc(db, "customers", customerId);
+        // 🔥 FIX 2: Customer ID mein Dukan wale ki ID (uid) mix kar di taaki numbers clash na hon
+        const uniqueIdentifier = customerPhone || customerName || `Unknown_${Date.now()}`;
+        const safeCustomerId = `${auth.currentUser.uid}_${uniqueIdentifier}`;
+
+        const custRef = doc(db, "customers", safeCustomerId);
         const custSnap = await getDoc(custRef);
         const todayDate = new Date().toISOString().split('T')[0];
 
@@ -320,7 +329,8 @@ const BillingForm = ({ setBillingMeta }) => {
             phone: customerPhone || '',
             totalDue: remainingUdhar,
             lastUpdate: todayDate,
-            userId: auth.currentUser ? auth.currentUser.uid : null
+            // 🔥 FIX 1: Yahan bhi direct UID aayegi
+            userId: auth.currentUser.uid
           });
         }
       }
@@ -332,7 +342,6 @@ const BillingForm = ({ setBillingMeta }) => {
       toast.error("Error! Bill save nahi hua.");
     }
     finally {
-      // 🔥 SAVE COMPLETE HOTE HI SCREEN UNLOCK
       setIsSaving(false);
     }
   };
@@ -571,7 +580,14 @@ const BillingForm = ({ setBillingMeta }) => {
 
                 <div className="col-span-5 grid grid-cols-3 gap-2 mb-3 md:mb-0">
                   <div>
-                    <input type="number" min="1" className="w-full border p-2 rounded text-center text-sm font-semibold" value={item.qty} onChange={(e) => handleUpdate(index, 'qty', parseInt(e.target.value) || 0)} />
+                    <input
+                      type="number"
+                      min="1"
+                      onFocus={(e) => e.target.select()}
+                      className="w-full border p-2 rounded text-center text-sm font-semibold"
+                      value={item.qty}
+                      onChange={(e) => handleUpdate(index, 'qty', e.target.value === '' ? '' : parseInt(e.target.value))}
+                    />
                   </div>
                   <div>
                     <select className="w-full border p-2 rounded bg-white text-sm" value={item.unit} onChange={(e) => handleUpdate(index, 'unit', e.target.value)}>
@@ -581,10 +597,11 @@ const BillingForm = ({ setBillingMeta }) => {
                   <div>
                     <input
                       type="number"
+                      placeholder="Rate"
+                      onFocus={(e) => e.target.select()}
                       className="w-full border p-2 rounded text-center text-sm font-bold bg-white"
                       value={item.price}
-                      onChange={(e) => handleUpdate(index, 'price', parseFloat(e.target.value) || 0)}
-                      placeholder="Rate"
+                      onChange={(e) => handleUpdate(index, 'price', e.target.value === '' ? '' : parseFloat(e.target.value))}
                     />
                   </div>
                 </div>
@@ -621,7 +638,17 @@ const BillingForm = ({ setBillingMeta }) => {
             <>
               <div>
                 <label className="block text-xs font-bold text-green-600 uppercase mb-1">Received Amount Now (₹)</label>
-                <input type="number" placeholder="Amt" className="w-full border border-green-300 p-2 rounded-lg bg-white text-sm font-black text-green-700" value={amountPaid || ''} onChange={(e) => setAmountPaid(Math.min(grandTotal, parseFloat(e.target.value) || 0))} />
+                <input
+                  type="number"
+                  placeholder="Amt"
+                  onFocus={(e) => e.target.select()}
+                  className="w-full border border-green-300 p-2 rounded-lg bg-white text-sm font-black text-green-700"
+                  value={amountPaid}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAmountPaid(val === '' ? '' : Math.min(grandTotal, parseFloat(val)));
+                  }}
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-red-600 uppercase mb-1">Remaining Udhar Balance (₹)</label>
@@ -637,11 +664,29 @@ const BillingForm = ({ setBillingMeta }) => {
         <div className="md:col-span-5 bg-gray-50 p-4 rounded-lg border border-gray-100 grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">💸 Cash Discount (₹)</label>
-            <input type="number" className="w-full border p-2 rounded bg-white text-sm font-bold text-red-600 focus:outline-none" value={discount || ''} onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))} />
+            <input
+              type="number"
+              onFocus={(e) => e.target.select()}
+              className="w-full border p-2 rounded bg-white text-sm font-bold text-red-600 focus:outline-none"
+              value={discount}
+              onChange={(e) => {
+                const val = e.target.value;
+                setDiscount(val === '' ? '' : Math.max(0, parseFloat(val)));
+              }}
+            />
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">🛠️ Fitting Charge (₹)</label>
-            <input type="number" className="w-full border p-2 rounded bg-white text-sm font-bold text-blue-600 focus:outline-none" value={serviceCharge || ''} onChange={(e) => setServiceCharge(Math.max(0, parseFloat(e.target.value) || 0))} />
+            <input
+              type="number"
+              onFocus={(e) => e.target.select()}
+              className="w-full border p-2 rounded bg-white text-sm font-bold text-blue-600 focus:outline-none"
+              value={serviceCharge}
+              onChange={(e) => {
+                const val = e.target.value;
+                setServiceCharge(val === '' ? '' : Math.max(0, parseFloat(val)));
+              }}
+            />
           </div>
         </div>
 

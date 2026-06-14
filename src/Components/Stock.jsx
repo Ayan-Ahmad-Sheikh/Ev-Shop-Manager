@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { onAuthStateChanged } from "firebase/auth";
 
 const Stock = () => {
   const [inventory, setInventory] = useState([]);
@@ -9,13 +10,18 @@ const Stock = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchItems = async () => {
-      if (!auth.currentUser) return;
+    // 🔥 FIX: Firebase Auth ka jagna wait karo, Infinite Loading se bachne ke liye
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setLoading(false); // User nahi hai toh loading hatao
+        return;
+      }
 
       try {
         const q = query(
           collection(db, "items"),
-          where("userId", "==", auth.currentUser.uid)
+          // 🔥 FIX: Direct 'user.uid' use karo
+          where("userId", "==", user.uid)
         );
 
         const querySnapshot = await getDocs(q);
@@ -33,11 +39,11 @@ const Stock = () => {
       } catch (error) {
         console.error("Firebase fetch error:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Saara maal aane ke baad hi loading hategi
       }
-    };
+    });
 
-    fetchItems();
+    return () => unsubscribe(); // Cleanup
   }, []);
 
   // --- SEARCH & FILTER STATES ---

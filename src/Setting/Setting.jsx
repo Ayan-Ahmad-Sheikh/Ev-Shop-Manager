@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
+import { onAuthStateChanged } from "firebase/auth";
 import toast from 'react-hot-toast';
 
 const Settings = () => {
@@ -32,13 +33,17 @@ const Settings = () => {
 
     // --- 3. FETCH EXISTING SETTINGS ---
     useEffect(() => {
-        const fetchSettings = async () => {
-            // 👉 Agar login nahi hai, toh aage mat badho
-            if (!auth.currentUser) return;
-            const userId = auth.currentUser.uid;
+        // 🔥 FIX: Firebase Auth ka wait karo taaki Refresh par Infinite Loading na ho
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                setLoading(false);
+                return;
+            }
 
             try {
-                // 👉 Yahan document ka naam change kiya hai
+                const userId = user.uid;
+
+                // 👉 shopDetails fetch karo
                 const shopDocRef = doc(db, 'settings', `shopDetails_${userId}`);
                 const shopSnap = await getDoc(shopDocRef);
 
@@ -46,19 +51,23 @@ const Settings = () => {
                     setShopDetails(shopSnap.data());
                 }
 
-                // 👉 Invoice rules ka naam bhi change kiya hai
+                // 👉 invoiceRules fetch karo
                 const invDocRef = doc(db, 'settings', `invoiceRules_${userId}`);
                 const invSnap = await getDoc(invDocRef);
+
                 if (invSnap.exists()) {
                     setInvoiceSettings(invSnap.data());
                 }
             } catch (error) {
                 console.error("Error fetching settings:", error);
             } finally {
+                // Ab data aaye ya error, loading spinner hamesha hategi
                 setLoading(false);
             }
-        };
-        fetchSettings();
+        });
+
+        // Cleanup
+        return () => unsubscribe();
     }, []);
 
     const handleSaveProfile = async (e) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from "firebase/auth";
 import toast from 'react-hot-toast';
 
 const ItemDetailsMaster = () => {
@@ -18,7 +19,13 @@ const ItemDetailsMaster = () => {
   const [adjustType, setAdjustType] = useState('ADD');
 
   useEffect(() => {
-    const fetchSingleItem = async () => {
+    // 🔥 FIX: Firebase Auth ka wait karo taaki Refresh karne par permission error na aaye
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setLoading(false);
+        return; // User nahi hai toh ruk jao
+      }
+
       try {
         const docRef = doc(db, "items", id);
         const docSnap = await getDoc(docRef);
@@ -27,15 +34,17 @@ const ItemDetailsMaster = () => {
           setItem({ id: docSnap.id, ...docSnap.data() });
         } else {
           console.log("Cloud me yeh part nahi mila!");
+          setItem(null); // UI ko batane ke liye ki item nahi mila
         }
       } catch (error) {
         console.error("Error fetching item:", error);
+        // Agar permission error aaya toh console me dikhega
       } finally {
         setLoading(false);
       }
-    };
+    });
 
-    fetchSingleItem();
+    return () => unsubscribe(); // Cleanup function
   }, [id]);
 
   if (!item) {
@@ -287,7 +296,16 @@ const ItemDetailsMaster = () => {
 
               <div>
                 <label className="block text-xs text-gray-500 font-bold uppercase mb-1">Enter Quantity ({item.primaryUnit})</label>
-                <input required type="number" min="1" className="border p-2 rounded w-full font-bold" value={adjustQty || ''} onChange={(e) => setAdjustQty(parseInt(e.target.value) || 0)} placeholder="e.g. 10, 50" />
+                <input
+                  required
+                  type="number"
+                  min="1"
+                  onFocus={(e) => e.target.select()}
+                  className="border p-2 rounded w-full font-bold"
+                  value={adjustQty}
+                  onChange={(e) => setAdjustQty(e.target.value === '' ? '' : parseInt(e.target.value))}
+                  placeholder="e.g. 10, 50"
+                />
               </div>
 
               <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-bold text-sm">
@@ -334,9 +352,37 @@ const ItemDetailsMaster = () => {
               <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">3. Dual-Pricing Setup Matrix</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Purchase Price (₹)</label><input type="number" required className="w-full border p-2.5 bg-white rounded font-bold text-sm" value={item.purchasePrice} onChange={(e) => setItem({ ...item, purchasePrice: parseFloat(e.target.value) || 0 })} /></div>
-                  <div><label className="block text-xs font-bold text-blue-600 mb-1 uppercase">🛍️ Retail Selling Price (₹)</label><input type="number" required className="w-full border border-blue-200 p-2.5 bg-blue-50/20 rounded font-black text-blue-700 text-sm" value={item.sellingPrice} onChange={(e) => setItem({ ...item, sellingPrice: parseFloat(e.target.value) || 0 })} /></div>
-                  <div><label className="block text-xs font-bold text-indigo-600 mb-1 uppercase">📦 Wholesale Bulk Price (₹)</label><input type="number" required className="w-full border border-indigo-200 p-2.5 bg-indigo-50/20 rounded font-black text-indigo-700 text-sm" value={item.wholesalePrice || 0} onChange={(e) => setItem({ ...item, wholesalePrice: parseFloat(e.target.value) || 0 })} placeholder="Set Bulk Rate" /></div>
+                  <div><label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Purchase Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      onFocus={(e) => e.target.select()}
+                      className="w-full border p-2.5 bg-white rounded font-bold text-sm"
+                      value={item.purchasePrice}
+                      onChange={(e) => setItem({ ...item, purchasePrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div><label className="block text-xs font-bold text-blue-600 mb-1 uppercase">🛍️ Retail Selling Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      onFocus={(e) => e.target.select()}
+                      className="w-full border border-blue-200 p-2.5 bg-blue-50/20 rounded font-black text-blue-700 text-sm"
+                      value={item.sellingPrice}
+                      onChange={(e) => setItem({ ...item, sellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div><label className="block text-xs font-bold text-indigo-600 mb-1 uppercase">📦 Wholesale Bulk Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      onFocus={(e) => e.target.select()}
+                      className="w-full border border-indigo-200 p-2.5 bg-indigo-50/20 rounded font-black text-indigo-700 text-sm"
+                      value={item.wholesalePrice}
+                      onChange={(e) => setItem({ ...item, wholesalePrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                      placeholder="Set Bulk Rate"
+                    />
+                  </div>
                 </div>
               </div>
 

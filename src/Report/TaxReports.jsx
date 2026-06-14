@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { onAuthStateChanged } from "firebase/auth";
 
 const TaxReports = () => {
     const [loading, setLoading] = useState(true);
@@ -17,19 +18,25 @@ const TaxReports = () => {
     const [inventory, setInventory] = useState({});
 
     useEffect(() => {
-        const fetchAllData = async () => {
-            // 👉 Agar login nahi hai, toh return kar do
-            if (!auth.currentUser) return;
+        // 🔥 FIX: Firebase Auth ka jagna wait karo, taki refresh karne par report crash na ho
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                setLoading(false);
+                return;
+            }
 
             try {
-                const userId = auth.currentUser.uid;
+                const userId = user.uid; // Direct UID yahan se lo
                 setLoading(true);
 
                 // 1. Fetch Inventory (Sirf apna)
                 const invQuery = query(collection(db, "items"), where("userId", "==", userId));
                 const invSnap = await getDocs(invQuery);
                 const invMap = {};
-                invSnap.docs.forEach(doc => { invMap[doc.id] = doc.data(); invMap[doc.data().name] = doc.data(); });
+                invSnap.docs.forEach(doc => { 
+                    invMap[doc.id] = doc.data(); 
+                    invMap[doc.data().name] = doc.data(); 
+                });
                 setInventory(invMap);
 
                 // 2. Fetch Bills (Sirf apna)
@@ -47,10 +54,12 @@ const TaxReports = () => {
             } catch (error) {
                 console.error("Error fetching report data:", error);
             } finally {
-                setLoading(false);
+                setLoading(false); // Ab report aane ke baad hi chakkari hategi
             }
-        };
-        fetchAllData();
+        });
+
+        // Cleanup
+        return () => unsubscribe();
     }, []);
 
     // --- FILTER DATA BY SELECTED MONTH ---

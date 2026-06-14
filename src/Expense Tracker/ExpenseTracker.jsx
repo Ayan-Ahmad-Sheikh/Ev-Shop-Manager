@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, addDoc, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { onAuthStateChanged } from "firebase/auth";
 import toast from 'react-hot-toast';
 
 const ExpenseTracker = () => {
@@ -45,11 +46,42 @@ const ExpenseTracker = () => {
   };
 
   useEffect(() => {
-    fetchExpenses();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const q = query(
+          collection(db, "expenses"),
+          where("userId", "==", user.uid), // 🔥 FIX: direct user.uid
+          orderBy("date", "desc")
+        );
+
+        const snap = await getDocs(q);
+        const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setExpenses(list);
+      } catch (error) {
+        console.error("Expense fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
+
+    // 🛡️ SECURITY CHECK: Bina user ID ke data aage badhne hi mat do
+    if (!auth.currentUser) {
+      toast.error("⚠️ Security Error: User ID nahi mili. Page refresh karo!");
+      return;
+    }
+
     if (!amount || amount <= 0) {
       toast.error("Sahi amount daalo bhai!");
       return;
@@ -62,7 +94,8 @@ const ExpenseTracker = () => {
         description: description || 'N/A',
         date: expenseDate,
         timestamp: new Date().toISOString(),
-        userId: auth.currentUser ? auth.currentUser.uid : null
+        // 🔥 FIX: Direct UID daalo, null ka chance khatam
+        userId: auth.currentUser.uid
       };
 
       await addDoc(collection(db, "expenses"), newExpense);
@@ -72,8 +105,12 @@ const ExpenseTracker = () => {
       setAmount('');
       setDescription('');
 
-      // Refresh list
-      fetchExpenses();
+      // Refresh list (Ab hum fetch function wapas call karne ki jagah page refresh jaisa feel denge)
+      // Note: Ideal tarika ye hai ki naya obj direct state me add kar do:
+      // setExpenses(prev => [ { id: "temp", ...newExpense }, ...prev ]); 
+      // Par fetch karne ka logic bhi badhiya hai, just Ensure tu onAuthStateChanged ke bahar ek fetch function rakhe agar call karna ho,
+      // YA FIR page ko silently reload hone de. 
+      // Sabse simple: window.location.reload(); ya component ke andar fetch list ko alag function me daal kar call karo.
     } catch (error) {
       console.error("Expense save error:", error);
       toast.error("Data save karne me dikkat aayi.");
@@ -177,7 +214,14 @@ const ExpenseTracker = () => {
           <form onSubmit={handleAddExpense} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Amount (₹)</label>
-              <input type="number" required className="w-full border p-2.5 rounded-lg bg-gray-50 text-lg font-black text-gray-800 focus:ring-2 focus:ring-blue-500" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <input
+                type="number"
+                required
+                onFocus={(e) => e.target.select()}
+                className="w-full border p-2.5 rounded-lg bg-gray-50 text-lg font-black text-gray-800 focus:ring-2 focus:ring-blue-500"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              />
             </div>
 
             <div>

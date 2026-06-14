@@ -29,20 +29,35 @@ const Billing = () => {
   const [invoicePrefix, setInvoicePrefix] = useState('INV-'); // Prefix store karne ke liye
 
   useEffect(() => {
+    // 🛡️ SABSE ZAROORI: Agar user logged in nahi hai (ya load ho raha hai), toh aage mat badho
+    if (!auth.currentUser) return;
+
     // 1. Ek sath Shop Details aur Prefix (Rules) fetch karenge
     const fetchSettings = async () => {
       try {
-        const userId = auth.currentUser.uid;
-        const shopDoc = await getDoc(doc(db, "settings", `shopDetails_${userId}`));
-        const rulesDoc = await getDoc(doc(db, "settings", `invoiceRules_${userId}`));
+        // 👉 NAYA TARIKA: Direct doc mangne ki jagah Query use karo
+        const q = query(
+          collection(db, "settings"),
+          where("userId", "==", auth.currentUser.uid)
+        );
 
-        if (shopDoc.exists()) {
-          setShopDetails(prev => ({ ...prev, ...shopDoc.data() }));
-        }
+        const querySnapshot = await getDocs(q);
 
-        if (rulesDoc.exists() && rulesDoc.data().billPrefix) {
-          setInvoicePrefix(rulesDoc.data().billPrefix);
-        }
+        // Jo bhi settings tere user ID se match hongi, unko loop karke set kar do
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          
+          // Agar document ka naam shopDetails se shuru hota hai
+          if (doc.id.includes("shopDetails")) {
+            setShopDetails(prev => ({ ...prev, ...data }));
+          }
+          
+          // Agar document ka naam invoiceRules se shuru hota hai
+          if (doc.id.includes("invoiceRules") && data.billPrefix) {
+            setInvoicePrefix(data.billPrefix);
+          }
+        });
+
       } catch (error) {
         console.error("Error fetching settings:", error);
       }
@@ -50,10 +65,7 @@ const Billing = () => {
 
     // 2. Bills History fetch karenge
     const fetchBills = async () => {
-      if (!auth.currentUser) return;
-
       try {
-
         const q = query(
           collection(db, "bills"),
           where("userId", "==", auth.currentUser.uid)
@@ -72,16 +84,13 @@ const Billing = () => {
             invoiceType: data.invoiceType || 'B2C',
             customerGstin: data.customerGstin || '',
             isLocal: data.isLocal !== undefined ? data.isLocal : true,
-
             transportName: data.transportName || '',
             marka: data.marka || '',
             destination: data.destination || '',
-
             cgst: data.cgst || 0,
             sgst: data.sgst || 0,
             igst: data.igst || 0,
             totalTax: data.totalTax || 0,
-
             date: data.billDate ? data.billDate.split('T')[0] : 'N/A',
             fullDate: data.billDate,
             items: data.items || [],
@@ -107,7 +116,7 @@ const Billing = () => {
 
     fetchSettings();
     fetchBills();
-  }, []);
+}, []);
 
   const todayObj = new Date();
   const yyyy = todayObj.getFullYear();
