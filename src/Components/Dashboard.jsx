@@ -25,19 +25,31 @@ const Dashboard = () => {
                 return;
             }
 
-            try {
-                const userId = user.uid;
+            const userId = user.uid;
+            let isSetupComplete = false;
 
-                // 🛑 STEP 1: Pehle Shop Setup Check karo
+            // 🛑 STEP 1: Pehle Shop Setup Check karo (ALAG SAFE ZONE MEIN)
+            try {
                 const shopRef = doc(db, "settings", `shopDetails_${userId}`);
                 const shopSnap = await getDoc(shopRef);
 
-                if (!shopSnap.exists()) {
-                    navigate('/setup-shop');
-                    return; // Agar setup nahi hai, toh aage ka dashboard data mat laao
+                if (shopSnap.exists()) {
+                    isSetupComplete = true; // Dukan mil gayi!
                 }
+            } catch (error) {
+                // Agar Firebase "Permission Denied" de, iska matlab file exist nahi karti (Naya User hai)
+                console.log("New user detected or no shop details found.");
+                isSetupComplete = false;
+            }
 
-                // 🟢 STEP 2: Agar dukan hai, toh Dashboard ka saara maal laao
+            // Agar dukan nahi mili, toh setup par bhejo aur baaki data fetch mat karo
+            if (!isSetupComplete) {
+                navigate('/setup-shop');
+                return;
+            }
+
+            // 🟢 STEP 2: Agar dukan hai, toh Dashboard ka saara maal laao
+            try {
                 // A. Stock data laayein
                 const invQuery = query(collection(db, "items"), where("userId", "==", userId));
                 const invSnap = await getDocs(invQuery);
