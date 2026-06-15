@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { db, auth } from '../Firebase/firebaseConfig';
 import { collection, getDocs, addDoc, doc, getDoc, updateDoc, setDoc, query, where } from 'firebase/firestore';
 
-// 💡 PROPS UPDATE: User ke naye requirements ke mutabik 'setBillingMeta' callback receive kiya
+// ðŸ’¡ PROPS UPDATE: User ke naye requirements ke mutabik 'setBillingMeta' callback receive kiya
 const BillingForm = ({ setBillingMeta }) => {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
@@ -25,18 +25,18 @@ const BillingForm = ({ setBillingMeta }) => {
   const [invoiceType, setInvoiceType] = useState('B2C'); // 'B2C' (Retail) ya 'B2B' (Wholesale)
   const [isLocal, setIsLocal] = useState(true);          // true = CGST+SGST, false = IGST
 
-  // 🔥 NEW STATES FOR LOGISTICS (TRANSPORT DETAILS)
+  // ðŸ”¥ NEW STATES FOR LOGISTICS (TRANSPORT DETAILS)
   const [transportName, setTransportName] = useState('');
   const [marka, setMarka] = useState('');
   const [destination, setDestination] = useState('');
 
   useEffect(() => {
     const fetchInventory = async () => {
-      // 👉 Agar login nahi hai, toh aage mat badho
+      // ðŸ‘‰ Agar login nahi hai, toh aage mat badho
       if (!auth.currentUser) return;
 
       try {
-        // 👉 YAHAN QUERY ADD KI HAI (Sirf apna stock laane ke liye)
+        // ðŸ‘‰ YAHAN QUERY ADD KI HAI (Sirf apna stock laane ke liye)
         const q = query(
           collection(db, "items"),
           where("userId", "==", auth.currentUser.uid)
@@ -55,7 +55,7 @@ const BillingForm = ({ setBillingMeta }) => {
         console.error("Error fetching stock for billing:", error);
       }
       finally {
-        // 🔥 DATA AANE KE BAAD SKELETON HATANE KE LIYE
+        // ðŸ”¥ DATA AANE KE BAAD SKELETON HATANE KE LIYE
         setLoading(false);
       }
     };
@@ -220,9 +220,9 @@ const BillingForm = ({ setBillingMeta }) => {
   };
 
   const handleCompleteSale = async () => {
-    // 🛡️ SECURITY CHECK: Agar login ID nahi mili toh pehle hi rok do
+    // ðŸ›¡ï¸ SECURITY CHECK: Agar login ID nahi mili toh pehle hi rok do
     if (!auth.currentUser) {
-      toast.error("⚠️ Security Error: User ID nahi mili. Page ko ek baar refresh karo!");
+      toast.error("âš ï¸ Security Error: User ID nahi mili. Page ko ek baar refresh karo!");
       return;
     }
 
@@ -233,7 +233,7 @@ const BillingForm = ({ setBillingMeta }) => {
 
     setIsSaving(true);
 
-    // 🛑 STEP 1: SAFETY CHECKPOST - Stock check logic (Ekdum perfect hai tera)
+    // ðŸ›‘ STEP 1: SAFETY CHECKPOST - Stock check logic (Ekdum perfect hai tera)
     for (const item of items) {
       if (item.productId && item.productId.toString().length > 10) {
         const itemRef = doc(db, "items", item.productId);
@@ -248,15 +248,15 @@ const BillingForm = ({ setBillingMeta }) => {
           }
 
           if (currentStock < deductQty) {
-            toast.error(`❌ Stock Shortage! "${item.name}" ka stock sirf ${currentStock} bacha hai, par aap ${deductQty} bech rahe hain. Pehle stock in karo bhai!`);
-            setIsSaving(false); // 👈 Pura function rukne se pehle button ko wapas normal karna mat bhulna
+            toast.error(`âŒ Stock Shortage! "${item.name}" ka stock sirf ${currentStock} bacha hai, par aap ${deductQty} bech rahe hain. Pehle stock in karo bhai!`);
+            setIsSaving(false); // ðŸ‘ˆ Pura function rukne se pehle button ko wapas normal karna mat bhulna
             return;
           }
         }
       }
     }
 
-    // 🟢 STEP 2: AGAR SAB MAAL IN-STOCK HAI, TOH BILL SAVE KARO
+    // ðŸŸ¢ STEP 2: AGAR SAB MAAL IN-STOCK HAI, TOH BILL SAVE KARO
     try {
       const billData = {
         customerName: customerName || 'Cash Customer',
@@ -280,7 +280,7 @@ const BillingForm = ({ setBillingMeta }) => {
         amountPaid: paymentMode === 'Split' ? parseFloat(amountPaid) : grandTotal,
         remainingUdhar: remainingUdhar,
         billDate: new Date().toISOString(),
-        // 🔥 FIX 1: Direct UID daalo kyunki upar check laga diya hai
+        // ðŸ”¥ FIX 1: Direct UID daalo kyunki upar check laga diya hai
         userId: auth.currentUser.uid
       };
 
@@ -315,7 +315,7 @@ const BillingForm = ({ setBillingMeta }) => {
 
       // --- KHATA BOOK LOGIC (FIXED) ---
       if (paymentMode === 'Split' && remainingUdhar > 0) {
-        // 🔥 FIX 2: Customer ID mein Dukan wale ki ID (uid) mix kar di taaki numbers clash na hon
+        // ðŸ”¥ FIX 2: Customer ID mein Dukan wale ki ID (uid) mix kar di taaki numbers clash na hon
         const uniqueIdentifier = customerPhone || customerName || `Unknown_${Date.now()}`;
         const safeCustomerId = `${auth.currentUser.uid}_${uniqueIdentifier}`;
 
@@ -335,13 +335,13 @@ const BillingForm = ({ setBillingMeta }) => {
             phone: customerPhone || '',
             totalDue: remainingUdhar,
             lastUpdate: todayDate,
-            // 🔥 FIX 1: Yahan bhi direct UID aayegi
+            // ðŸ”¥ FIX 1: Yahan bhi direct UID aayegi
             userId: auth.currentUser.uid
           });
         }
       }
 
-      toast.success(`🎉 Bill Successfully Saved & Stock Updated!`);
+      toast.success(`ðŸŽ‰ Bill Successfully Saved & Stock Updated!`);
       navigate('/billing');
     } catch (error) {
       console.error("Firebase Error details:", error.code, error.message);
@@ -410,7 +410,7 @@ const BillingForm = ({ setBillingMeta }) => {
         </div>
 
         <div className="text-center pt-2">
-          <p className="text-xs font-bold text-gray-400">⏳ Loading Master Data & Live Inventory...</p>
+          <p className="text-xs font-bold text-gray-400">â³ Loading Master Data & Live Inventory...</p>
         </div>
       </div>
     );
@@ -431,7 +431,7 @@ const BillingForm = ({ setBillingMeta }) => {
       {/* Header Panel */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-4">
         <div>
-          <h2 className="text-lg md:text-xl font-black text-gray-800">🧾 Automated Counter Sales</h2>
+          <h2 className="text-lg md:text-xl font-black text-gray-800">ðŸ§¾ Automated Counter Sales</h2>
           <p className="text-xs text-gray-400">Tax values are accurately assigned on product master settings</p>
         </div>
 
@@ -441,14 +441,14 @@ const BillingForm = ({ setBillingMeta }) => {
             onClick={() => toggleBillingMode('B2C')}
             className={`px-4 py-2 rounded-lg transition-all ${invoiceType === 'B2C' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'}`}
           >
-            🛍️ Retail Rate Mode
+            ðŸ›ï¸ Retail Rate Mode
           </button>
           <button
             type="button"
             onClick={() => toggleBillingMode('B2B')}
             className={`px-4 py-2 rounded-lg transition-all ${invoiceType === 'B2B' ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'}`}
           >
-            📦 Wholesale Rate Mode
+            ðŸ“¦ Wholesale Rate Mode
           </button>
         </div>
       </div>
@@ -517,7 +517,7 @@ const BillingForm = ({ setBillingMeta }) => {
         <div className="col-span-5">Search & Select Part</div>
         <div className="col-span-2 text-center">Qty</div>
         <div className="col-span-1.5 text-center">Unit</div>
-        <div className="col-span-1.5 text-center">Rate (₹)</div>
+        <div className="col-span-1.5 text-center">Rate (â‚¹)</div>
         <div className="col-span-2 text-right">Amount</div>
       </div>
 
@@ -550,7 +550,7 @@ const BillingForm = ({ setBillingMeta }) => {
                     }}
                   />
 
-                  {/* 🔥 FIXED DROUDOWN INNER MAP LEVEL BOX */}
+                  {/* ðŸ”¥ FIXED DROUDOWN INNER MAP LEVEL BOX */}
                   {searchQuery[index] && !item.productId && (
                     <div className="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                       {filteredInventory.map(inv => {
@@ -577,7 +577,7 @@ const BillingForm = ({ setBillingMeta }) => {
                           onClick={() => handleQuickAddItem(index)}
                           className="p-3 bg-orange-50 hover:bg-orange-100 cursor-pointer text-sm font-bold text-orange-700 flex items-center justify-between"
                         >
-                          <span>➕ "{searchQuery[index]}" Not Found! Add as New?</span>
+                          <span>âž• "{searchQuery[index]}" Not Found! Add as New?</span>
                         </div>
                       )}
                     </div>
@@ -614,9 +614,9 @@ const BillingForm = ({ setBillingMeta }) => {
 
                 <div className="col-span-2 flex justify-between items-center border-t md:border-none pt-2 md:pt-0">
                   <div className="md:w-full md:text-right md:pr-4">
-                    <span className="font-bold text-gray-800 text-sm">₹ {(item.qty * item.price).toFixed(2)}</span>
+                    <span className="font-bold text-gray-800 text-sm">â‚¹ {(item.qty * item.price).toFixed(2)}</span>
                   </div>
-                  <button type="button" onClick={() => removeRow(index)} className="text-red-400 hover:text-red-600 font-bold p-1">✕</button>
+                  <button type="button" onClick={() => removeRow(index)} className="text-red-400 hover:text-red-600 font-bold p-1">âœ•</button>
                 </div>
 
               </div>
@@ -629,21 +629,21 @@ const BillingForm = ({ setBillingMeta }) => {
 
       {/* Credit Ledger partial tracking split template */}
       <div className="border-t pt-4 bg-gray-50 p-4 rounded-xl border border-gray-200 mt-4 space-y-4">
-        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">💳 Payment Settlement</h3>
+        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">ðŸ’³ Payment Settlement</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Payment Mode</label>
             <select className="w-full border p-2.5 rounded-lg bg-white text-sm font-bold cursor-pointer focus:ring-2 focus:ring-blue-500" value={paymentMode} onChange={(e) => { setPaymentMode(e.target.value); if (e.target.value !== 'Split') setAmountPaid(0); }}>
-              <option value="Cash">💵 Pure Cash (Nagad)</option>
-              <option value="Online">📱 Online (UPI / QR Code)</option>
-              <option value="Split">🤝 Split / Partial (Udhar Khata)</option>
+              <option value="Cash">ðŸ’µ Pure Cash (Nagad)</option>
+              <option value="Online">ðŸ“± Online (UPI / QR Code)</option>
+              <option value="Split">ðŸ¤ Split / Partial (Udhar Khata)</option>
             </select>
           </div>
 
           {paymentMode === 'Split' && (
             <>
               <div>
-                <label className="block text-xs font-bold text-green-600 uppercase mb-1">Received Amount Now (₹)</label>
+                <label className="block text-xs font-bold text-green-600 uppercase mb-1">Received Amount Now (â‚¹)</label>
                 <input
                   type="number"
                   placeholder="Amt"
@@ -657,8 +657,8 @@ const BillingForm = ({ setBillingMeta }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-red-600 uppercase mb-1">Remaining Udhar Balance (₹)</label>
-                <input type="text" readOnly className="w-full border border-red-200 p-2 rounded-lg bg-red-50 text-sm font-black text-red-600" value={`₹ ${remainingUdhar.toFixed(2)}`} />
+                <label className="block text-xs font-bold text-red-600 uppercase mb-1">Remaining Udhar Balance (â‚¹)</label>
+                <input type="text" readOnly className="w-full border border-red-200 p-2 rounded-lg bg-red-50 text-sm font-black text-red-600" value={`â‚¹ ${remainingUdhar.toFixed(2)}`} />
               </div>
             </>
           )}
@@ -669,7 +669,7 @@ const BillingForm = ({ setBillingMeta }) => {
       <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         <div className="md:col-span-5 bg-gray-50 p-4 rounded-lg border border-gray-100 grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">💸 Cash Discount (₹)</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ðŸ’¸ Cash Discount (â‚¹)</label>
             <input
               type="number"
               onFocus={(e) => e.target.select()}
@@ -682,7 +682,7 @@ const BillingForm = ({ setBillingMeta }) => {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">🛠️ Fitting Charge (₹)</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ðŸ› ï¸ Fitting Charge (â‚¹)</label>
             <input
               type="number"
               onFocus={(e) => e.target.select()}
@@ -700,28 +700,28 @@ const BillingForm = ({ setBillingMeta }) => {
         <div className="md:col-span-7 bg-gray-900 text-white p-5 rounded-xl space-y-2 text-sm shadow-md">
           <div className="flex justify-between text-xs text-gray-400">
             <span>Items Base Subtotal:</span>
-            <span className="font-mono">₹ {calculatedSubTotal.toFixed(2)}</span>
+            <span className="font-mono">â‚¹ {calculatedSubTotal.toFixed(2)}</span>
           </div>
 
           {isLocal ? (
             <div className="grid grid-cols-2 gap-4 text-xs text-gray-400 border-b border-gray-800 pb-2">
-              <div className="flex justify-between"><span>CGST:</span><span className="font-mono">₹ {totalCgst.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span>SGST:</span><span className="font-mono">₹ {totalSgst.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>CGST:</span><span className="font-mono">â‚¹ {totalCgst.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>SGST:</span><span className="font-mono">â‚¹ {totalSgst.toFixed(2)}</span></div>
             </div>
           ) : (
             <div className="flex justify-between text-xs text-orange-400 border-b border-gray-800 pb-2">
               <span>IGST (InterState):</span>
-              <span className="font-mono">₹ {totalIgst.toFixed(2)}</span>
+              <span className="font-mono">â‚¹ {totalIgst.toFixed(2)}</span>
             </div>
           )}
 
           <div className="flex flex-col md:flex-row justify-between items-center pt-2 gap-4">
             <h2 className="text-xl font-black">
-              Grand Total: <span className="text-green-400 font-mono">₹ {grandTotal.toFixed(2)}</span>
+              Grand Total: <span className="text-green-400 font-mono">â‚¹ {grandTotal.toFixed(2)}</span>
             </h2>
             <div className="flex gap-2">
               <button type="button" onClick={handleCancel} className="px-4 py-2 text-xs bg-gray-800 text-gray-300 rounded font-bold hover:bg-gray-700">Cancel</button>
-              <button type="button" onClick={handleCompleteSale} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold text-xs shadow-md">Complete & Save Bill 🚀</button>
+              <button type="button" onClick={handleCompleteSale} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold text-xs shadow-md">Complete & Save Bill ðŸš€</button>
             </div>
           </div>
         </div>
