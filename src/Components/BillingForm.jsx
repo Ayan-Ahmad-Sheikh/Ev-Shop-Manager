@@ -284,7 +284,9 @@ const BillingForm = ({ setBillingMeta }) => {
         userId: auth.currentUser.uid
       };
 
+      // console.log("Saving Bill Data...", billData);
       const docRef = await addDoc(collection(db, "bills"), billData);
+      // console.log("Bill saved, now updating stock...");
 
       // --- ACTUAL STOCK DEDUCTION ---
       for (const item of items) {
@@ -303,7 +305,10 @@ const BillingForm = ({ setBillingMeta }) => {
             let newStock = currentStock - deductQty;
             newStock = parseFloat(newStock.toFixed(2));
 
-            await updateDoc(itemRef, { openingStock: newStock });
+            await updateDoc(itemRef, {
+              openingStock: newStock,
+              userId: auth.currentUser.uid // 👈 Ye line rule ko pass karwayegi
+            });
           }
         }
       }
@@ -321,7 +326,8 @@ const BillingForm = ({ setBillingMeta }) => {
         if (custSnap.exists()) {
           await updateDoc(custRef, {
             totalDue: custSnap.data().totalDue + remainingUdhar,
-            lastUpdate: todayDate
+            lastUpdate: todayDate,
+            userId: auth.currentUser.uid
           });
         } else {
           await setDoc(custRef, {
@@ -338,8 +344,8 @@ const BillingForm = ({ setBillingMeta }) => {
       toast.success(`🎉 Bill Successfully Saved & Stock Updated!`);
       navigate('/billing');
     } catch (error) {
-      console.error("Bill Save Error: ", error);
-      toast.error("Error! Bill save nahi hua.");
+      console.error("Firebase Error details:", error.code, error.message);
+      toast.error("Error! Permission denied.");
     }
     finally {
       setIsSaving(false);
