@@ -220,6 +220,11 @@ const BillingForm = ({ setBillingMeta }) => {
   };
 
   const handleCompleteSale = async () => {
+if (isSaving) {
+  toast.info("Sabr rakho bhai, save ho raha hai...");
+  return;
+}
+    
     // 🛡️ SECURITY CHECK: Agar login ID nahi mili toh pehle hi rok do
     if (!auth.currentUser) {
       toast.error("⚠️ Security Error: User ID nahi mili. Page ko ek baar refresh karo!");
@@ -715,7 +720,14 @@ const BillingForm = ({ setBillingMeta }) => {
             </h2>
             <div className="flex gap-2">
               <button type="button" onClick={handleCancel} className="px-4 py-2 text-xs bg-gray-800 text-gray-300 rounded font-bold hover:bg-gray-700">Cancel</button>
-              <button type="button" onClick={handleCompleteSale} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold text-xs shadow-md">Complete & Save Bill 🚀</button>
+              <button 
+  type="button" 
+  onClick={handleCompleteSale} 
+  disabled={isSaving} 
+  className={`px-6 py-2 rounded font-bold text-xs shadow-md ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+>
+  {isSaving ? "Processing..." : "Complete & Save Bill 🚀"}
+</button>
             </div>
           </div>
         </div>
