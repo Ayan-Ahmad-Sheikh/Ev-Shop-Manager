@@ -340,7 +340,7 @@ const BillingForm = ({ setBillingMeta }) => {
       navigate('/billing');
     } catch (error) {
       console.error("Bill Save Error: ", error);
-      toast.error("Error! Bill save nahi hua.");
+      toast.error(`Error: ${error.message || "Bill save nahi hua"}`);
     }
     finally {
       setIsSaving(false);
