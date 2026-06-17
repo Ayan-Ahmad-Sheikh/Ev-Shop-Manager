@@ -42,46 +42,32 @@ function App() {
       <Toaster position="top-right" reverseOrder={false} />
       <BrowserRouter>
         <Routes>
-          {/* 1. LOGIN ROUTE: Bina Layout ke full screen chalega. Agar pehle se login ho toh automatic Dashboard (/) bhej dega */}
+          {/* Public Routes */}
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-          <Route path="/setup-shop" element={user ? <SetupShop /> : <Navigate to="/login" />} />
+          <Route path="/" element={!user ? <Welcome /> : <Navigate to="/dashboard" />} />
 
-          {/* 2. PROTECTED ROUTES: Baaki saare pages Layout ke andar tabhi dikhenge jab banda login hoga */}
-          <Route
-            path="*"
-            element={
-              user ? (
-                <Layout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/billing" element={<Billing />} />
-                    <Route path="/stock" element={<Stock />} />
-                    <Route path="/new-bill" element={<BillingForm />} />
-                    <Route path="/add-item" element={<AddItemForm />} />
-                    <Route path="/stock-details/:id" element={<ItemDetailsMaster />} />
-                    <Route path="/customer-ledger" element={<CustomerLedger />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/expenses" element={<ExpenseTracker />} />
-                    <Route path="/item-report" element={<ItemWiseReport />} />
-                    <Route path="/reports" element={<TaxReports />} />
-                    {/* Galat URL daalne par seedha Dashboard */}
-                    <Route path="*" element={<Navigate to="/" />} />
-                  </Routes>
-                </Layout>
-              ) : (
-                // Agar login nahi hai, toh seedha login screen par fenko
-                <Routes>
-                  {/* Yeh wahin rahega, isko upar-niche mat karna */}
-                  <Route path="/" element={<Welcome />} />
-                  <Route path="*" element={<Navigate to="/login" />} />
-                </Routes>
-              )
-            }
-          />
+          {/* Protected Routes (Layout ke andar) */}
+          <Route element={user ? <Layout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} /> : <Navigate to="/login" />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/stock" element={<Stock />} />
+            <Route path="/new-bill" element={<BillingForm />} />
+            <Route path="/add-item" element={<AddItemForm />} />
+            <Route path="/stock-details/:id" element={<ItemDetailsMaster />} />
+            <Route path="/customer-ledger" element={<CustomerLedger />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/expenses" element={<ExpenseTracker />} />
+            <Route path="/item-report" element={<ItemWiseReport />} />
+            <Route path="/reports" element={<TaxReports />} />
+            <Route path="/setup-shop" element={<SetupShop />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     </div>
-  )
+  );
 }
 
 export default App
