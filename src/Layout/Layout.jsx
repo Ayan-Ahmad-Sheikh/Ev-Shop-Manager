@@ -1,9 +1,10 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import Sidebar from '../Navbars/Sidebar';
 import Navbar from '../Navbars/Navbar';
 
 // Props me se state nikaali jo App.jsx se aayi h
-const Layout = ({ children, sidebarOpen, setSidebarOpen }) => {
+const Layout = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <div className="flex bg-gray-50 min-h-screen">
       
@@ -19,7 +20,7 @@ const Layout = ({ children, sidebarOpen, setSidebarOpen }) => {
 
         {/* 3. Tumhare saare routes (Dashboard, Billing etc.) yahan render honge */}
         <main className="flex-1">
-          {children}
+          <Outlet />
         </main>
 
       </div>
