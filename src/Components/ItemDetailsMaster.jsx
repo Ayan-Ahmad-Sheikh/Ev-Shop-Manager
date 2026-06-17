@@ -249,10 +249,14 @@ const ItemDetailsMaster = () => {
                   <p className="text-xs text-indigo-500 font-bold uppercase">📦 Wholesale Price</p>
                   <p className="text-xl font-black mt-1 text-indigo-600">₹ {item.wholesalePrice || 'Not Set'}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded border text-center">
-                  <p className="text-xs text-gray-400 font-bold uppercase">Loose Price</p>
-                  <p className="text-xl font-black mt-1 text-purple-600">₹ {item.secondarySellingPrice || '-'}</p>
-                </div>
+                {item.secondaryUnit && (
+    <div className="bg-gray-50 p-4 rounded border text-center">
+      <p className="text-xs text-gray-400 font-bold uppercase">Loose Price</p>
+      <p className="text-xl font-black mt-1 text-purple-600">
+        ₹ {item.secondarySellingPrice || 'N/A'}
+      </p>
+    </div>
+  )}
               </div>
 
               <div className="border-t pt-4 space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
@@ -384,18 +388,21 @@ const ItemDetailsMaster = () => {
                       placeholder="Set Bulk Rate"
                     />
                   </div>
-
-                  <div><label className="block text-xs font-bold text-purple-600 mb-1 uppercase">Loose Price (₹)</label>
-  <input
-    type="number"
-    onFocus={(e) => e.target.select()}
-    className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm"
-    value={item.secondarySellingPrice || ''}
-    onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-    placeholder="Set Loose Rate"
-  />
-</div>
-                </div>
+                  {item.secondaryUnit && (
+    <div>
+      <label className="block text-xs font-bold text-purple-600 mb-1 uppercase">
+        Loose Price (₹)
+      </label>
+      <input
+        type="number"
+        onFocus={(e) => e.target.select()}
+        className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm"
+        value={item.secondarySellingPrice || ''}
+        onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+        placeholder="Set Loose Rate"
+      />
+    </div>
+  )}
               </div>
 
               <div className="text-right">
