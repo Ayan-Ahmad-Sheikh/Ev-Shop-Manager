@@ -103,6 +103,7 @@ const ItemDetailsMaster = () => {
         purchasePrice: Number(item.purchasePrice) || 0,
         sellingPrice: Number(item.sellingPrice) || 0,         // Retail Selling Rate
         wholesalePrice: Number(item.wholesalePrice) || 0,     // Wholesale Bulk Rate
+        secondarySellingPrice: Number(item.secondarySellingPrice) || 0,
         gstRate: parseInt(item.gstRate) || 0                  // Integer representation
       };
 
@@ -383,6 +384,17 @@ const ItemDetailsMaster = () => {
                       placeholder="Set Bulk Rate"
                     />
                   </div>
+
+                  <div><label className="block text-xs font-bold text-purple-600 mb-1 uppercase">Loose Price (₹)</label>
+  <input
+    type="number"
+    onFocus={(e) => e.target.select()}
+    className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm"
+    value={item.secondarySellingPrice || ''}
+    onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+    placeholder="Set Loose Rate"
+  />
+</div>
                 </div>
               </div>
 
