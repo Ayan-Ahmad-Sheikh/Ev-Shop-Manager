@@ -322,7 +322,6 @@ const ItemDetailsMaster = () => {
           {/* TAB 3: EDIT DETAILS (UPDATED FORM WITH NEW GST + WHOLESALE FIELDS INPUTS) */}
           {activeTab === 'edit' && (
             <form onSubmit={handleUpdateDetails} className="space-y-6">
-
               {/* Sub-Section 1: Core Metadata */}
               <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">1. Item Information Update</h4>
@@ -339,16 +338,16 @@ const ItemDetailsMaster = () => {
                   <div>
                     <label className="block text-xs font-bold text-purple-700 mb-1 uppercase">GST Tax Rate Slab Bracket</label>
                     <select className="w-full border p-2.5 bg-white rounded font-bold text-sm text-purple-800 outline-none" value={item.gstRate || 0} onChange={(e) => setItem({ ...item, gstRate: parseInt(e.target.value) || 0 })}>
-                      <option value={18}>18% (Standard Controllers/Chargers)</option>
-                      <option value={28}>28% (Luxury items / Tyres)</option>
-                      <option value={12}>12% (Loose Wires / General Accessories)</option>
-                      <option value={5}>5% (EV Batteries Pack)</option>
+                      <option value={18}>18% (Standard)</option>
+                      <option value={28}>28% (Luxury)</option>
+                      <option value={12}>12% (General)</option>
+                      <option value={5}>5% (EV Battery)</option>
                       <option value={0}>0% (Tax Exempted)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-purple-700 mb-1 uppercase">HSN Code {item.gstRate > 0 && <span className="text-red-500">*</span>}</label>
-                    <input type="text" maxLength={8} className="w-full border p-2.5 bg-white rounded font-mono font-bold text-sm uppercase" value={item.hsnCode || ''} onChange={(e) => setItem({ ...item, hsnCode: e.target.value })} placeholder="e.g. 8504" />
+                    <label className="block text-xs font-bold text-purple-700 mb-1 uppercase">HSN Code</label>
+                    <input type="text" maxLength={8} className="w-full border p-2.5 bg-white rounded font-mono font-bold text-sm uppercase" value={item.hsnCode || ''} onChange={(e) => setItem({ ...item, hsnCode: e.target.value })} />
                   </div>
                 </div>
               </div>
@@ -358,50 +357,32 @@ const ItemDetailsMaster = () => {
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">3. Dual-Pricing Setup Matrix</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div><label className="block text-xs font-bold text-gray-600 mb-1 uppercase">Purchase Price (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      onFocus={(e) => e.target.select()}
-                      className="w-full border p-2.5 bg-white rounded font-bold text-sm"
-                      value={item.purchasePrice}
-                      onChange={(e) => setItem({ ...item, purchasePrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                    />
+                    <input type="number" required onFocus={(e) => e.target.select()} className="w-full border p-2.5 bg-white rounded font-bold text-sm" value={item.purchasePrice} onChange={(e) => setItem({ ...item, purchasePrice: e.target.value === '' ? '' : parseFloat(e.target.value) })} />
                   </div>
-                  <div><label className="block text-xs font-bold text-blue-600 mb-1 uppercase">🛍️ Retail Selling Price (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      onFocus={(e) => e.target.select()}
-                      className="w-full border border-blue-200 p-2.5 bg-blue-50/20 rounded font-black text-blue-700 text-sm"
-                      value={item.sellingPrice}
-                      onChange={(e) => setItem({ ...item, sellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                    />
+                  <div><label className="block text-xs font-bold text-blue-600 mb-1 uppercase">🛍️ Retail Price (₹)</label>
+                    <input type="number" required onFocus={(e) => e.target.select()} className="w-full border border-blue-200 p-2.5 bg-blue-50/20 rounded font-black text-blue-700 text-sm" value={item.sellingPrice} onChange={(e) => setItem({ ...item, sellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })} />
                   </div>
-                  <div><label className="block text-xs font-bold text-indigo-600 mb-1 uppercase">📦 Wholesale Bulk Price (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      onFocus={(e) => e.target.select()}
-                      className="w-full border border-indigo-200 p-2.5 bg-indigo-50/20 rounded font-black text-indigo-700 text-sm"
-                      value={item.wholesalePrice}
-                      onChange={(e) => setItem({ ...item, wholesalePrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                      placeholder="Set Bulk Rate"
-                    />
+                  <div><label className="block text-xs font-bold text-indigo-600 mb-1 uppercase">📦 Wholesale Price (₹)</label>
+                    <input type="number" required onFocus={(e) => e.target.select()} className="w-full border border-indigo-200 p-2.5 bg-indigo-50/20 rounded font-black text-indigo-700 text-sm" value={item.wholesalePrice} onChange={(e) => setItem({ ...item, wholesalePrice: e.target.value === '' ? '' : parseFloat(e.target.value) })} />
                   </div>
-        </div>
+                </div>
+
                 {item.secondaryUnit && (
                   <div className="md:w-1/3">
                     <label className="block text-xs font-bold text-purple-600 mb-1 uppercase">Loose Price (₹)</label>
-                    <input
-                      type="number"
-                      onFocus={(e) => e.target.select()}
-                      className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm"
-                      value={item.secondarySellingPrice || ''}
-                      onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                      placeholder="Set Loose Rate"
-                    />
+                    <input type="number" onFocus={(e) => e.target.select()} className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm" value={item.secondarySellingPrice || ''} onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })} placeholder="Set Loose Rate" />
                   </div>
                 )}
+              </div>
+
+              <div className="text-right">
+                <button type="submit" className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold text-sm shadow transition-all">
+                  💾 Update & Save All Changes
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
