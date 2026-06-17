@@ -18,7 +18,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 setPersistence(auth, browserLocalPersistence)
-  .catch((error) => console.error("Auth Persistence Error:", error));
+  .then(() => {
+    console.log("Firebase session phone ki memory mein lock ho gaya!");
+  })
+  .catch((error) => {
+    console.error("Session lock karne mein error:", error);
+  });
 // Initialize Database aur usko export karo
 export const db = getFirestore(app);
 
