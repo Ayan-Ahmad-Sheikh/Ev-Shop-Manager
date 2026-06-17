@@ -388,32 +388,20 @@ const ItemDetailsMaster = () => {
                       placeholder="Set Bulk Rate"
                     />
                   </div>
-                  {item.secondaryUnit && (
-    <div>
-      <label className="block text-xs font-bold text-purple-600 mb-1 uppercase">
-        Loose Price (₹)
-      </label>
-      <input
-        type="number"
-        onFocus={(e) => e.target.select()}
-        className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm"
-        value={item.secondarySellingPrice || ''}
-        onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-        placeholder="Set Loose Rate"
-      />
-    </div>
-  )}
-              </div>
-
-              <div className="text-right">
-                <button type="submit" className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold text-sm shadow transition-all">
-                  💾 Update & Save All Changes
-                </button>
-              </div>
-            </form>
-          )}
-
         </div>
+                {item.secondaryUnit && (
+                  <div className="md:w-1/3">
+                    <label className="block text-xs font-bold text-purple-600 mb-1 uppercase">Loose Price (₹)</label>
+                    <input
+                      type="number"
+                      onFocus={(e) => e.target.select()}
+                      className="w-full border border-purple-200 p-2.5 bg-purple-50/20 rounded font-black text-purple-700 text-sm"
+                      value={item.secondarySellingPrice || ''}
+                      onChange={(e) => setItem({ ...item, secondarySellingPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                      placeholder="Set Loose Rate"
+                    />
+                  </div>
+                )}
       </div>
     </div>
   );
