@@ -26,13 +26,25 @@ function App() {
   const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   useEffect(() => {
+    // 1. Auth check
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setIsAuthChecking(false); // Checking complete ho gayi
+      setIsAuthChecking(false);
     });
-    return () => unsubscribe();
-  }, []);
 
+    // 2. Heartbeat (Session ko zinda rakhne ke liye)
+    const interval = setInterval(() => {
+      if (auth.currentUser) {
+        auth.currentUser.getIdToken(true).catch(() => {});
+      }
+    }, 5 * 60 * 1000); // Har 5 minute mein
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, []);
+  
   if (isAuthChecking) {
     return <div className="flex h-screen items-center justify-center font-bold text-gray-500">⏳ Chaabi check kar rahe hain...</div>;
   }
