@@ -18,6 +18,20 @@ const ItemDetailsMaster = () => {
   const [adjustQty, setAdjustQty] = useState(0);
   const [adjustType, setAdjustType] = useState('ADD');
 
+  const formatStockDisplay = (stock, primaryUnit, secondaryUnit, conversionRate) => {
+    const convRate = Number(conversionRate) || 1;
+    const totalPieces = Math.round(Number(stock) * convRate);
+    if (!secondaryUnit) return `${stock} ${primaryUnit}`;
+
+    const boxes = Math.floor(totalPieces / convRate);
+    const pieces = totalPieces % convRate;
+
+    let display = "";
+    if (boxes > 0) display += `${boxes} ${primaryUnit} `;
+    if (pieces > 0) display += `${pieces} ${secondaryUnit}`;
+    return display.trim() || `0 ${primaryUnit}`;
+  };
+
   useEffect(() => {
     // 🔥 FIX: Firebase Auth ka wait karo taaki Refresh karne par permission error na aaye
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -235,7 +249,7 @@ const ItemDetailsMaster = () => {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-gray-50 p-4 rounded border text-center">
                   <p className="text-xs text-gray-400 font-bold uppercase">Current Stock</p>
-                  <p className={`text-xl font-black mt-1 ${item.openingStock <= item.minStock ? 'text-red-600' : 'text-green-600'}`}>{item.openingStock} {item.primaryUnit}</p>
+                  <p className={`text-xl font-black mt-1 ${item.openingStock <= item.minStock ? 'text-red-600' : 'text-green-600'}`}>{formatStockDisplay(item.openingStock, item.primaryUnit, item.secondaryUnit, item.conversionRate)}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded border text-center">
                   <p className="text-xs text-gray-400 font-bold uppercase">Purchase Rate</p>
@@ -250,13 +264,13 @@ const ItemDetailsMaster = () => {
                   <p className="text-xl font-black mt-1 text-indigo-600">₹ {item.wholesalePrice || 'Not Set'}</p>
                 </div>
                 {item.secondaryUnit && (
-    <div className="bg-gray-50 p-4 rounded border text-center">
-      <p className="text-xs text-gray-400 font-bold uppercase">Loose Price</p>
-      <p className="text-xl font-black mt-1 text-purple-600">
-        ₹ {item.secondarySellingPrice || 'N/A'}
-      </p>
-    </div>
-  )}
+                  <div className="bg-gray-50 p-4 rounded border text-center">
+                    <p className="text-xs text-gray-400 font-bold uppercase">Loose Price</p>
+                    <p className="text-xl font-black mt-1 text-purple-600">
+                      ₹ {item.secondarySellingPrice || 'N/A'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-4 space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">

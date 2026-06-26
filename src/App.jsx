@@ -32,13 +32,6 @@ function App() {
       setIsAuthChecking(false);
     });
 
-    // 2. Heartbeat (Session ko zinda rakhne ke liye)
-    const interval = setInterval(() => {
-      if (auth.currentUser) {
-        auth.currentUser.getIdToken(true).catch(() => {});
-      }
-    }, 5 * 60 * 1000); // Har 5 minute mein
-
     return () => {
       unsubscribe();
       clearInterval(interval);

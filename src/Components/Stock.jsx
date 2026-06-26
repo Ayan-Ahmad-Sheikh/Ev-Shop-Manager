@@ -68,6 +68,14 @@ const Stock = () => {
     item.status === 'Active' && item.openingStock <= item.minStock
   ).length;
 
+  const formatStockDisplay = (stock, primaryUnit, secondaryUnit, conversionRate) => {
+    if (!secondaryUnit || !conversionRate) return `${Number(stock).toFixed(2).replace(/\.00$/, '')} ${primaryUnit}`;
+    const totalLooseItems = Math.round(Number(stock) * Number(conversionRate));
+    const mainUnitCount = Math.floor(totalLooseItems / Number(conversionRate));
+    const looseUnitCount = totalLooseItems % Number(conversionRate);
+    return `${mainUnitCount > 0 ? `${mainUnitCount} ${primaryUnit} ` : ''}${looseUnitCount > 0 ? `${looseUnitCount} ${secondaryUnit}` : ''}`.trim() || `0 ${primaryUnit}`;
+  };
+  
   // --- 2. MULTI-FILTER SEARCH LOGIC ---
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
@@ -304,7 +312,7 @@ const Stock = () => {
 
                     <td className="p-3.5">
                       <span className={`font-black px-2 py-1 rounded text-xs ${item.openingStock <= item.minStock ? 'text-red-700 bg-red-50 border border-red-100' : 'text-green-700 bg-green-50'}`}>
-                        {item.openingStock}
+                        {formatStockDisplay(item.openingStock, item.primaryUnit, item.secondaryUnit, item.conversionRate)}
                       </span>
                     </td>
 

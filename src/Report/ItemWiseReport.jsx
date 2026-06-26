@@ -12,6 +12,16 @@ const ItemWiseReport = () => {
     // Grand Summary States
     const [summary, setSummary] = useState({ totalQty: 0, totalRevenue: 0, totalProfit: 0 });
 
+    const [inventoryMap, setInventoryMap] = useState({});
+
+    const formatStockDisplay = (stock, primaryUnit, secondaryUnit, conversionRate) => {
+        if (!secondaryUnit || !conversionRate) return `${Number(stock).toFixed(2).replace(/\.00$/, '')} ${primaryUnit}`;
+        const totalLooseItems = Math.round(Number(stock) * Number(conversionRate));
+        const mainUnitCount = Math.floor(totalLooseItems / Number(conversionRate));
+        const looseUnitCount = totalLooseItems % Number(conversionRate);
+        return `${mainUnitCount > 0 ? `${mainUnitCount} ${primaryUnit} ` : ''}${looseUnitCount > 0 ? `${looseUnitCount} ${secondaryUnit}` : ''}`.trim() || `0 ${primaryUnit}`;
+    };
+
     useEffect(() => {
         // 🔥 FIX: Firebase Auth ka wait karo taaki Refresh karne par loading stuck na ho
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -26,12 +36,14 @@ const ItemWiseReport = () => {
                 // 1. Fetch Inventory (Sirf apna)
                 const invQuery = query(collection(db, "items"), where("userId", "==", userId));
                 const invSnap = await getDocs(invQuery);
-                const inventoryMap = {};
+                const tempMap = {};
                 invSnap.docs.forEach(doc => {
                     const data = doc.data();
-                    inventoryMap[doc.id] = data; // Lookup by ID
-                    inventoryMap[data.name] = data; // Lookup by Name fallback
+                    tempMap[doc.id] = data;
+                    tempMap[data.name] = data;
                 });
+
+                setInventoryMap(tempMap);
 
                 // 2. Fetch All Bills (Sirf apna)
                 const billsQuery = query(collection(db, "bills"), where("userId", "==", userId));
@@ -48,7 +60,7 @@ const ItemWiseReport = () => {
                         const key = item.name; // Part ka naam identifier hai
 
                         if (!partStats[key]) {
-                            partStats[key] = { name: key, qtySold: 0, revenue: 0, cost: 0, profit: 0, currentStock: 0 };
+                            partStats[key] = { name: key, qtySold: 0, revenue: 0, cost: 0, profit: 0, currentStock: 0, primaryUnit: 'Unit', secondaryUnit: '', conversionRate: 1, primaryQty: 0, primaryRevenue: 0, primaryCost: 0, secondaryQty: 0, secondaryRevenue: 0, secondaryCost: 0 };
                         }
 
                         // Sales details add karo
@@ -57,14 +69,39 @@ const ItemWiseReport = () => {
                         partStats[key].revenue += itemRevenue;
 
                         // Cost (Lagat) nikalo asli database se
-                        const refItem = inventoryMap[item.productId] || inventoryMap[item.name];
-                        const purchasePrice = refItem ? (refItem.purchasePrice || 0) : 0;
-                        
+                        const refItem = tempMap[item.productId] || tempMap[item.name];
+
+                        if (refItem) {
+                            partStats[key].primaryUnit = refItem.primaryUnit || 'Unit';
+                            partStats[key].secondaryUnit = refItem.secondaryUnit || '';
+                            partStats[key].conversionRate = refItem.conversionRate || 1;
+                            partStats[key].currentStock = refItem.openingStock || 0;
+                        }
+
+                        let costPricePerUnit = refItem ? (Number(refItem.purchasePrice) || 0) : 0;
+
+                        const isSecondary = refItem && item.unit === refItem.secondaryUnit;
+
+                        if (isSecondary) {
+                            // 📦 Pcs (Loose) ki calculation
+                            const convRate = Number(refItem.conversionRate) || 1;
+                            costPricePerUnit = costPricePerUnit / convRate;
+
+                            partStats[key].secondaryQty += item.qty;
+                            partStats[key].secondaryRevenue += itemRevenue;
+                            partStats[key].secondaryCost += (item.qty * costPricePerUnit);
+                        } else {
+                            // 📦 Box (Bulk) ki calculation
+                            partStats[key].primaryQty += item.qty;
+                            partStats[key].primaryRevenue += itemRevenue;
+                            partStats[key].primaryCost += (item.qty * costPricePerUnit);
+                        }
+
                         // 💡 Note: Agar tu aage chal kar secondary unit (e.g. Box vs Pcs) laata hai, 
                         // toh purchasePrice ko yahan conversionRate se divide karna padega. 
                         // Abhi ke liye tera logic 100% correct hai.
-                        const itemCost = (item.qty * purchasePrice);
-                        
+                        const itemCost = (item.qty * costPricePerUnit);
+
                         partStats[key].cost += itemCost;
                         // Live stock update
                         partStats[key].currentStock = refItem ? (refItem.openingStock || 0) : 0;
@@ -79,7 +116,9 @@ const ItemWiseReport = () => {
                 // Object ko Array mein convert karo aur Profit calculate karo
                 const finalArray = Object.values(partStats).map(part => ({
                     ...part,
-                    profit: part.revenue - part.cost
+                    profit: part.revenue - part.cost,
+                    primaryProfit: part.primaryRevenue - part.primaryCost,
+                    secondaryProfit: part.secondaryRevenue - part.secondaryCost
                 }));
 
                 setReportData(finalArray);
@@ -226,29 +265,73 @@ const ItemWiseReport = () => {
                                 <th className="p-4 w-12 text-center">#</th>
                                 <th className="p-4">Part Name</th>
                                 <th className="p-4 text-center">Total Qty Sold</th>
-                                <th className="p-4 text-right">Revenue Generated</th>
+                                <th className="p-4 text-right">Total Revenue</th>
+                                <th className="p-4 text-right text-blue-600">Primary Profit</th>
+                                <th className="p-4 text-right text-purple-600">Secondary Profit</th>
                                 <th className="p-4 text-right text-green-700">Net Profit</th>
                                 <th className="p-4 text-center">Current Stock</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-sm">
                             {processedData.length === 0 ? (
-                                <tr><td colSpan="6" className="p-8 text-center text-gray-400 font-medium">No sales data found.</td></tr>
+                                <tr>
+                                    <td colSpan="8" className="p-8 text-center text-gray-400 font-medium">No sales data found.</td>
+                                </tr>
                             ) : (
-                                processedData.map((part, index) => (
-                                    <tr key={part.name} className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-4 text-center text-gray-400 font-bold">{index + 1}</td>
-                                        <td className="p-4 font-bold text-gray-800 uppercase">{part.name}</td>
-                                        <td className="p-4 text-center font-black text-blue-600">{part.qtySold}</td>
-                                        <td className="p-4 text-right font-mono font-medium text-gray-600">₹{part.revenue.toLocaleString()}</td>
-                                        <td className="p-4 text-right font-mono font-black text-green-600">₹{part.profit.toLocaleString()}</td>
-                                        <td className="p-4 text-center">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold ${part.currentStock < 5 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
-                                                {part.currentStock} Pcs
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))
+                                processedData.map((part, index) => {
+                                    const itemRef = inventoryMap ? inventoryMap[part.name] : null;
+
+                                    // Check karein ki kya item mein secondary unit exist karti hai
+                                    const hasConversion = part.secondaryUnit && part.secondaryUnit !== '';
+
+                                    return (
+                                        <tr key={part.name} className="hover:bg-gray-50 transition-colors">
+                                            <td className="p-4 text-center text-gray-400 font-bold">{index + 1}</td>
+                                            <td className="p-4 font-bold text-gray-800 uppercase">{part.name}</td>
+                                            <td className="p-4 text-center font-black text-blue-600">{part.qtySold}</td>
+                                            <td className="p-4 text-right font-mono font-medium text-gray-600">₹{part.revenue.toLocaleString()}</td>
+
+                                            {/* 1. Dynamic Primary Profit Column */}
+                                            <td className="p-4 text-right font-mono text-xs text-blue-600 font-semibold">
+                                                {hasConversion ? (
+                                                    <>
+                                                        ₹{part.primaryProfit.toLocaleString()}
+                                                        <span className="block text-[10px] text-gray-400">({part.primaryQty} {part.primaryUnit} bika)</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        ₹{part.profit.toLocaleString()}
+                                                        <span className="block text-[10px] text-gray-400">({part.qtySold} {part.primaryUnit} bika)</span>
+                                                    </>
+                                                )}
+                                            </td>
+
+                                            {/* 2. Dynamic Secondary Profit Column (Hide if no conversion) */}
+                                            <td className="p-4 text-right font-mono text-xs text-purple-600 font-semibold">
+                                                {hasConversion ? (
+                                                    <>
+                                                        ₹{part.secondaryProfit.toLocaleString()}
+                                                        <span className="block text-[10px] text-gray-400">({part.secondaryQty} {part.secondaryUnit} bika)</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-gray-400 font-normal">—</span>
+                                                )}
+                                            </td>
+
+                                            <td className="p-4 text-right font-mono font-black text-green-700">₹{part.profit.toLocaleString()}</td>
+                                            <td className="p-4 text-center">
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${part.currentStock < 5 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {formatStockDisplay(
+                                                        part.currentStock,
+                                                        itemRef?.primaryUnit || 'Unit',
+                                                        itemRef?.secondaryUnit || '',
+                                                        itemRef?.conversionRate || 1
+                                                    )}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

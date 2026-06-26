@@ -19,10 +19,10 @@ export const auth = getAuth(app);
 
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
-    console.log("Firebase session phone ki memory mein lock ho gaya!");
+    console.log("Session Fevicol se chipak gaya hai!");
   })
   .catch((error) => {
-    console.error("Session lock karne mein error:", error);
+    console.error("Persistence Error:", error);
   });
 // Initialize Database aur usko export karo
 export const db = getFirestore(app);

@@ -141,10 +141,24 @@ const Dashboard = () => {
             b2cSales += (bill.grandTotal || 0);
         }
 
+        // 🔥 NAYA LOGIC: Live inventory ki jagah Bill ke andar save kiya hua Cost use karo
         (bill.items || []).forEach(item => {
-            const invItem = inventory.find(i => i.id === item.productId || i.name === item.name);
-            const pPrice = invItem ? (invItem.purchasePrice || 0) : 0;
-            currentCost += (item.qty * pPrice);
+            // Agar pichle step me 'itemProfit' ya 'purchasePriceAtSale' lock kiya tha, toh wo use karo
+            // Agar purana bill hai jisme lock nahi tha, toh fallback ke liye wahi qty * price use karo
+            if (item.purchasePriceAtSale) {
+                currentCost += (item.qty * item.purchasePriceAtSale);
+            } else {
+                // Ye fallback un purane bills ke liye hai jo update se pehle bane the
+                const invItem = inventory.find(i => i.id === item.productId || i.name === item.name);
+                const pPrice = invItem ? (Number(invItem.purchasePrice) || 0) : 0;
+
+                let costPerUnit = pPrice;
+                if (invItem && item.unit === invItem.secondaryUnit) {
+                    const conv = Number(invItem.conversionRate) || 1;
+                    costPerUnit = costPerUnit / conv;
+                }
+                currentCost += (item.qty * costPerUnit);
+            }
         });
     });
 
@@ -200,6 +214,18 @@ const Dashboard = () => {
         });
         activeGraphData = Object.keys(tempMap).map(k => ({ name: k, sales: tempMap[k] }));
     }
+
+    const formatStockDisplay = (stock, primaryUnit, secondaryUnit, conversionRate) => {
+        if (!secondaryUnit || !conversionRate) return `${Number(stock).toFixed(2).replace(/\.00$/, '')} ${primaryUnit}`;
+        const convRate = Number(conversionRate);
+        const totalPieces = Math.round(Number(stock) * convRate);
+        const boxes = Math.floor(totalPieces / convRate);
+        const pieces = totalPieces % convRate;
+        let display = "";
+        if (boxes > 0) display += `${boxes} ${primaryUnit} `;
+        if (pieces > 0) display += `${pieces} ${secondaryUnit}`;
+        return display.trim() || `0 ${primaryUnit}`;
+    };
 
     if (loading) {
         return (
@@ -463,7 +489,7 @@ const Dashboard = () => {
                                     {lowStockItems.map(item => (
                                         <tr key={item.id} className="border-b last:border-0">
                                             <td className="py-2.5 font-bold text-gray-800">{item.name}</td>
-                                            <td className="py-2.5 text-center text-red-600 font-bold bg-red-50 rounded border border-red-100">{item.openingStock} {item.primaryUnit}</td>
+                                            <td className="py-2.5 text-center text-red-600 font-bold bg-red-50 rounded border border-red-100">{formatStockDisplay(item.openingStock, item.primaryUnit, item.secondaryUnit, item.conversionRate)}</td>
                                             <td className="py-2.5 text-center text-gray-400 font-medium">{item.minStock}</td>
                                         </tr>
                                     ))}
